@@ -1,0 +1,140 @@
+\documentclass{res} 
+\usepackage[margin=1.0in]{geometry}
+\usepackage{hyperref}
+\addtolength{\textheight}{.5in}
+\newsectionwidth{0pt}  % So the text is not indented under section headings
+\topmargin=-.4in % start text higher on the page
+
+\begin{document}
+% Center the name over the entire width of resume:
+ \moveleft.5\hoffset\centerline{\large\bf Amit K. Saraff}
+% Draw a horizontal line the whole width of resume:
+ \moveleft\hoffset\vbox{\hrule width\resumewidth height 1pt}\smallskip
+ \moveleft.5\hoffset\centerline{726 North 137th Ave, Seattle, WA 98133, USA}
+ \moveleft.5\hoffset\centerline{+1 (407) 484-0146}
+
+\begin{resume}
+%\vspace{0.1in} 
+\section{\centerline{Experience}} 
+\vspace{2pt}
+
+{\sl Storage Team, Mixpanel} \hfill           {\small Oct 2022 - Nov 2024} \\
+{\small Seattle, WA       \hfill   (Senior Software Engineer)}
+   \begin{itemize} \itemsep -2pt % reduce space between items
+   \item Instrumental in driving to completion our India DC rollout to enable data residency for customers in APAC - https://mixpanel.com/blog/india-data-residency/.
+   \item Tech-lead on initiative to deprecate the use of persistent disks in our storage layer. Doing so reduced our infrastructure spend, simplified the storage-tier architecture, and sped up customer queries - multiple wins!
+   \item Tech-lead on initiative to optimize our infrastructure costs by single-instancing all customer historical data which resulted in reducing our overall GCP bill by \~10\%.
+   \item Dev lead on a system to detect and remediate hotspots in customer data in order to reduce long tail query latencies which, in turn, impacts query runtimes and customer experience.
+ \end{itemize}
+
+{\sl xFlow, Qualtrics Corporation} \hfill           {\small Jan 2022 - Oct 2022} \\
+{\small Seattle, WA       \hfill   (Staff Software Engineer)}
+   \begin{itemize} \itemsep -2pt % reduce space between items
+   \item Tech-lead for the xFlow platform which is Qualtrics' no/low code solution for experience management. Initiatives I 
+   led and contributed to include backend transition (Amazon SWF to Temporal), data-center migrations, new site build-ups, and delayed workflow executions (new feature).
+ \end{itemize}
+
+{\sl Azure Compute, Microsoft Corporation} \hfill        {\small April 2020 - Jan 2022} \\
+{\small Redmond, WA       \hfill   (Senior Software Engineer)}
+   \begin{itemize} \itemsep -2pt % reduce space between items
+   \item Team-lead working on reducing dock to live KPI from weeks to hours for customer managed edge zones. Reduces overall hardware lifecycle 
+   costs and enables faster small footprint datacenter buildouts.
+   \item Designed and implemented a zero-touch orchestration system to quickly bring up managed edge zones which ties together compute,
+   storage, and slb (software load-balancer) buildouts.
+%   \item Modified the Azure cloud hierarchy including subsystems and tooling to support "Managed Edge" which provides 
+%    on-premise Azure capabilities delivered via management from the public cloud.
+ \end{itemize}
+ 
+{\sl OneDrive, Microsoft Corporation} \hfill        {\small March 2015 - March 2020} \\
+{\small Redmond, WA       \hfill   (Senior Software Engineer)}
+   \begin{itemize} \itemsep -2pt % reduce space between items
+   \item Project team-lead for building an object store that applies erasure coding across datacenters for long-term storage. 
+   The system provides comparable reliability and availability as the existing, globally replicated store, while reducing effective bytes stored by 33\%.
+   \newline   
+    Managed a team of 3 developers and released a v1 inside the OneDrive Consumer (ODC) storage stack. 
+  \href{https://www.usenix.org/system/files/conference/atc17/atc17-chen_yu_lin.pdf}{Microsoft Research Paper}
+   \item Built a system to manage data movement across storage tiers to optimize price performance over an object's life-cycle. Influenced through close collaboration the design 
+   and development of Azure XArchive. Steady-state accomplished double-digit petabyte usage, driving down storage costs.
+  \item Collaborated on a single-instance object store (in-memory, object-level deduplication with a modifiable dataset) 
+   to reduce the total amount of storage transactions from high-transaction partners. At its peak, the system handled 
+   up to 8\% of total daily create and update operations.
+  \item Implemented an object garbage collector to detect unreferenced entries in ODC Storage. 
+   This reduced over 15 petabytes of total storage in the first year, with 0 user data loss.
+%  \item Extended the ODC user lookup and provisioning system to support additional services.
+ \end{itemize}
+ 
+{\sl SQL Server, Microsoft Corporation} \hfill        {\small August 2011 - March 2015} \\
+{\small Redmond, WA       \hfill   (Software Engineer)}
+   \begin{itemize} \itemsep -2pt % reduce space between items
+   \item Tech lead for automation of release workflow process. Working with 4 developers to streamline SQL Server's
+     update release process using a workflow-based system thereby reducing usage of disparate tools and vendor dependency.
+   \item Worked on front-end of Query Store in Management Studio which presents a graphical
+     interface to database administrators to help track top/regressed queries and allow forced plan selection.
+  %   \item Developer in Full-text Search engine in Microsoft SQL Server.
+%   Part of customer-centric team in charge of identifying and fixing critical and top priority requests
+%   to reduce problem isolation time and support call volume.
+%   \item Worked on in-house porting and integration tools to enable developers to accelerate code 
+%   movement between branches. Successfully migrated between source control systems(SD to TFS) and 
+%   extended application to cover distributed conflict resolution scenarios. Enabled one-click integration system
+%   for cross-branch syncs.
+ \end{itemize}
+ 
+%{\sl Sensorstar, Inc.} \hfill        {\small January 2011 - July 2011} \\
+%{\small Ellicott City, MD       \hfill   (Developer)}
+%  \begin{itemize} \itemsep -2pt
+%  \item  Architected the back-end system to store binary blobs(image, video, and audio clips) and metadata
+%  with HIPAA compliance objectives for an Android app for doctors during rounds and in-home visits.
+%\end{itemize} 
+ 
+ 
+{\sl Physics and Astronomy, Johns Hopkins University} \hfill   {\small May 2010 - October 2010}\\
+{\small Baltimore, MD       \hfill   (Summer Intern Developer)}
+  \begin{itemize} \itemsep -2pt
+  \item  Designed and implemented an image-processing pipeline for Hubble Space Telescope images under 
+  Dr. Wei Zheng. Modified and added extensions to existing drizzle process to enable combining of multiple images from
+  WCF3 and ACS cameras. Extended APSIS and multidrizzle packages to enable combining multiple arbitrary images.
+\end{itemize} 
+
+%{\sl Student Technology Services, Johns Hopkins University} \hfill  {\small April 2010 - July 2010}\\
+%{\small Baltimore, MD       \hfill   (Student Developer)}
+%  \begin{itemize} \itemsep -2pt
+%  \item  Worked on "Virtual JHU" - a project to create an in-browser 3D representation of the Johns Hopkins
+%  Homewood and Medical Campus.
+%  \item Designed and implemented a partial view system to speed up initial site loads and general rendering.
+%  \item  Wrote scripts to optimize/pre-render large sets of image files.
+%\end{itemize} \vspace{-6pt}
+
+%\vspace{0.1in} 
+%\section{\centerline{ Skills }}
+%\vspace{12pt} 
+%\moveleft.5\hoffset\centerline{C\#, C, C++, Perl, Python, Git, Source Depot, TFS, GCC, WinDBG}
+  
+%\vspace{0.1in}
+%\section{\centerline{Education}} 
+%\vspace{2pt} 
+%{\sl Master of Science, Computer Science} \\
+%{\small Johns Hopkins University, Baltimore, MD \hspace{0.2in}  \hfill June 2011 \\}
+%{\sl Bachelor of Technology, Computer Engineering}\\ % \sl will be bold italic in
+%{\small Sikkim Manipal University, Majitar, Sikkim, India      \hfill  June 2007 \\}
+ 
+\vspace{0.1in} 
+\section{\centerline{Publications}} 
+\vspace{12pt}
+\begin{itemize}
+   \item \href{https://amitsaraff.net/Zheng12_APLUS.pdf}
+    {"APLUS: A Data Reduction Pipeline for HST/ACS and WFC3 Images," Astronomical Data Analysis - VII, Proceedings, May 2012}
+\end{itemize}
+ 
+ 
+\vspace{0.1in} 
+\section{\centerline{Patents}} 
+\vspace{12pt}
+\begin{itemize}
+   \item \href{https://patents.justia.com/patent/12020038}
+    {"Peer booting operating systems on an edge network, Patent\# 12020038, Granted Jun 25, 2024}
+   \item \href{https://patents.justia.com/patent/12212456}
+    {"Pre-provisioning server hardware for deployment on an edge network, Patent\# 12212456, Granted Jan 28, 2025}
+\end{itemize}
+ 
+\end{resume} 
+\end{document}
