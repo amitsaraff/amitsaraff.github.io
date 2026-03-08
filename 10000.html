@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10,000 steps · 2026</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* ── layout ── */
+      --c:  24px;   /* cell size  (+26%) */
+      --cg:  4px;   /* cell gap */
+      --mg: 50px;   /* month column gap */
+      --wc: 20px;   /* week number column */
+      --wg:  3px;   /* inter-week-row gap */
+      --mw: calc(var(--wc) + var(--cg) + 7 * var(--c) + 6 * var(--cg));  /* 216px per month grid */
+
+      /* ── theme (overridden per-palette by JS) ── */
+      --bg:              #070707;
+      --accent:          #FFD700;
+      --fg-bright:       #e0e0e0;
+      --fg-mid:          #707070;
+      --fg-dim:          #585858;
+      --fg-faint:        #444444;
+      --fg-rule:         #333333;
+      --border-strong:   #161616;
+      --border-soft:     #141414;
+      --border-dim:      #111111;
+      --surface:         #0d0d0d;
+      --surface-border:  #1f1f1f;
+      --muted-bg:        #0f0f0f;
+      --up-color:        #3d8a4e;
+      --dn-color:        #943030;
+    }
+
+    /* ── scanline overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 3px,
+        rgba(0,0,0,0.07) 3px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+    body.light-mode::after {
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 3px,
+        rgba(0,0,0,0.025) 3px,
+        rgba(0,0,0,0.025) 4px
+      );
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg-dim);
+      font-family: monospace;
+      font-size: 16px;
+      padding: 65px 40px 90px;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    .wrap {
+      max-width: calc(3 * var(--mw) + 2 * var(--mg));  /* 748px: edge-to-edge */
+      margin: 0 auto;
+    }
+
+    /* ── header ── */
+    .header-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    h1 {
+      font-size: 35px;
+      font-weight: normal;
+      color: var(--accent);
+      letter-spacing: 4px;
+      line-height: 1;
+      transition: color 0.4s ease;
+    }
+    .rule { color: var(--fg-rule); }
+
+    /* ── palette selector ── */
+    .sel-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .sel-lbl {
+      font-size: 10px;
+      color: var(--fg-faint);
+      letter-spacing: 1px;
+    }
+    #palette-sel {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--accent);
+      font-family: monospace;
+      font-size: 11px;
+      padding: 5px 10px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color 0.3s, color 0.3s;
+    }
+    #palette-sel option { background: #111; color: #ddd; }
+
+    #mode-btn {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--fg-faint);
+      font-family: monospace;
+      font-size: 10px;
+      padding: 5px 10px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.3s, color 0.3s;
+    }
+    #mode-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    .meta {
+      color: var(--fg-dim);
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      margin-top: 10px;
+      transition: color 0.4s ease;
+    }
+    .meta em { color: var(--fg-mid); font-style: normal; }
+
+    /* ── year progress bar ── */
+    .progress-wrap { margin: 24px 0 36px; }
+    .progress-track {
+      height: 2px;
+      background: var(--border-soft);
+      position: relative;
+      overflow: visible;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      position: relative;
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: -4px;
+      width: 2px;
+      height: 10px;
+      background: var(--accent);
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 7px;
+    }
+    .progress-labels span {
+      font-size: 10px;
+      color: var(--fg-faint);
+      letter-spacing: 1px;
+    }
+
+    /* ── stats ── */
+    .stats {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 48px;
+      flex-wrap: wrap;
+    }
+    .card {
+      border: 1px solid var(--border-strong);
+      padding: 17px 20px;
+      flex: 1;
+      min-width: 138px;
+      opacity: 0;
+      animation: fadeUp 0.5s ease both;
+      transition: border-color 0.4s ease;
+    }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.12s; }
+    .card:nth-child(3) { animation-delay: 0.19s; }
+    .card:nth-child(4) { animation-delay: 0.26s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-val {
+      font-size: 22px;
+      color: var(--accent);
+      letter-spacing: 1px;
+      transition: color 0.4s ease;
+    }
+    .card-lbl {
+      font-size: 10px;
+      color: var(--fg-dim);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 8px;
+      transition: color 0.4s ease;
+    }
+
+    /* ── heatmap ── */
+    .months {
+      display: grid;
+      grid-template-columns: repeat(3, var(--mw));
+      gap: 44px var(--mg);
+      margin-bottom: 44px;
+    }
+
+    .month {
+      opacity: 0;
+      animation: fadeIn 0.6s ease both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .month-name {
+      color: var(--accent);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-soft);
+      transition: color 0.4s ease, border-color 0.4s ease;
+    }
+
+    .dow-row {
+      display: grid;
+      grid-template-columns: var(--wc) repeat(7, var(--c));
+      gap: var(--cg);
+      margin-bottom: 4px;
+    }
+    .dow-lbl {
+      font-size: 11px;
+      color: var(--fg-faint);
+      text-align: center;
+      line-height: var(--c);
+      transition: color 0.4s ease;
+    }
+    .wk-hdr { font-size: 9px; text-align: right; padding-right: 3px; }
+
+    .week-row {
+      display: grid;
+      grid-template-columns: var(--wc) repeat(7, var(--c));
+      gap: var(--cg);
+      margin-bottom: var(--wg);
+    }
+    .week-num {
+      width: var(--wc);
+      height: var(--c);
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 3px;
+      transition: color 0.4s ease;
+    }
+    .week-num.has-data { cursor: pointer; }
+    .week-num.has-data:hover { filter: brightness(1.5); }
+
+    .cell {
+      width: var(--c);
+      height: var(--c);
+      border-radius: 3px;
+    }
+    .cell.empty   { background: transparent !important; }
+    .cell.no-data { background: var(--muted-bg); transition: background 0.4s ease; }
+    .cell.day {
+      cursor: pointer;
+      transition: transform 0.12s, filter 0.12s;
+    }
+    .cell.day:hover {
+      transform: scale(1.5);
+      filter: brightness(1.4) saturate(1.2);
+      z-index: 10;
+      position: relative;
+    }
+
+    .month-sub {
+      color: var(--fg-dim);
+      font-size: 10px;
+      letter-spacing: 1px;
+      margin-top: 8px;
+      transition: color 0.4s ease;
+    }
+    .month-sub em { color: var(--up-color); font-style: normal; transition: color 0.4s ease; }
+
+    /* ── palette description ── */
+    .palette-desc {
+      font-size: 10px;
+      color: var(--fg-faint);
+      letter-spacing: 1px;
+      margin-top: 4px;
+      min-height: 14px;
+    }
+
+    /* ── tooltip ── */
+    #tip {
+      position: fixed;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 12px 16px;
+      font-size: 14px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.08s;
+      z-index: 999;
+      white-space: nowrap;
+      line-height: 1.7;
+    }
+    #tip.show { opacity: 1; }
+    .tip-date  { color: var(--accent); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
+    .tip-steps { color: var(--fg-bright); font-size: 20px; letter-spacing: 0.5px; }
+    .tip-delta { font-size: 12px; }
+    .tip-delta.up { color: var(--up-color); }
+    .tip-delta.dn { color: var(--dn-color); }
+
+    /* ── legend ── */
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-top: 6px;
+      border-top: 1px solid var(--border-dim);
+      transition: border-color 0.4s ease;
+    }
+    .leg-label { color: var(--fg-dim); font-size: 14px; letter-spacing: 1px; }
+    .leg-grad {
+      width: 150px;
+      height: 15px;
+      border-radius: 2px;
+      transition: background 0.4s ease;
+    }
+    .leg-items { display: flex; gap: 16px; flex-wrap: wrap; }
+    .leg-item  { display: flex; align-items: center; gap: 7px; }
+    .leg-sq    { width: 15px; height: 15px; border-radius: 2px; flex-shrink: 0; transition: background 0.4s ease; }
+    .leg-t     { color: var(--fg-dim); font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="header-row">
+      <h1>10,000 steps <span class="rule">·</span> 2026</h1>
+      <div class="sel-wrap">
+        <span class="sel-lbl">palette</span>
+        <select id="palette-sel" onchange="applyPalette(this.value)">
+          <option value="spectral">Spectral</option>
+          <option value="viridis">Viridis</option>
+          <option value="plasma">Plasma</option>
+          <option value="ember">Ember</option>
+          <option value="depth">Depth</option>
+        </select>
+        <button id="mode-btn" onclick="toggleMode()">dark</button>
+      </div>
+    </div>
+    <p class="meta">daily tracking // <em id="days-tracked"></em></p>
+    <p class="palette-desc" id="palette-desc"></p>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-labels">
+      <span>jan</span><span>apr</span><span>jul</span><span>oct</span><span>dec</span>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div class="months" id="months"></div>
+  <div class="legend" id="legend"></div>
+
+</div>
+
+<div id="tip">
+  <div class="tip-date"  id="tip-d"></div>
+  <div class="tip-steps" id="tip-s"></div>
+  <div class="tip-delta" id="tip-g"></div>
+</div>
+
+<script>
+// ── embedded data (mirrors steps.csv) ──────────────────────────────────────
+const CSV = `date,steps
+2026-01-01,9876
+2026-01-02,10234
+2026-01-03,8765
+2026-01-04,9012
+2026-01-05,10456
+2026-01-06,8234
+2026-01-07,9678
+2026-01-08,10789
+2026-01-09,7890
+2026-01-10,10345
+2026-01-11,9456
+2026-01-12,8901
+2026-01-13,10567
+2026-01-14,9234
+2026-01-15,8543
+2026-01-16,10678
+2026-01-17,9876
+2026-01-18,10123
+2026-01-19,8765
+2026-01-20,9456
+2026-01-21,10234
+2026-01-22,7634
+2026-01-23,9678
+2026-01-24,10345
+2026-01-25,8765
+2026-01-26,10978
+2026-01-27,9012
+2026-01-28,8234
+2026-01-29,10456
+2026-01-30,9876
+2026-01-31,10123
+2026-02-01,8765
+2026-02-02,9456
+2026-02-03,10234
+2026-02-04,7523
+2026-02-05,10856
+2026-02-06,9345
+2026-02-07,8012
+2026-02-08,10567
+2026-02-09,9876
+2026-02-10,10234
+2026-02-11,8765
+2026-02-12,9678
+2026-02-13,10456
+2026-02-14,8901
+2026-02-15,10123
+2026-02-16,9456
+2026-02-17,7789
+2026-02-18,10789
+2026-02-19,9234
+2026-02-20,8543
+2026-02-21,10678
+2026-02-22,9876
+2026-02-23,10234
+2026-02-24,8765
+2026-02-25,9012
+2026-02-26,10456
+2026-02-27,9678
+2026-02-28,10934
+2026-03-01,8765
+2026-03-02,9456
+2026-03-03,10234
+2026-03-04,7890
+2026-03-05,10789
+2026-03-06,9345
+2026-03-07,8012
+2026-03-08,10567`;
+
+// ── palettes ───────────────────────────────────────────────────────────────
+// Each palette defines:
+//   label:    display name
+//   desc:     design-theory rationale
+//   vars:     CSS custom properties to override on :root
+//   anchors:  [steps, hue, sat%, lightness%] interpolation points
+//   gradient: CSS gradient string for the legend bar
+//   swatches: [{c: color, l: label}] for legend items
+const PALETTES = {
+
+  // Traffic-light semantics: warm below goal, cool above.
+  // Most intuitive — red = bad, green = good. High contrast at goal boundary.
+  spectral: {
+    label: 'Spectral',
+    desc:  'traffic light — warm below goal, cool above',
+    vars: {
+      '--bg':'#070707','--accent':'#FFD700','--fg-bright':'#e0e0e0',
+      '--fg-mid':'#707070','--fg-dim':'#585858','--fg-faint':'#444444',
+      '--fg-rule':'#333333','--border-strong':'#161616','--border-soft':'#141414',
+      '--border-dim':'#111111','--surface':'#0d0d0d','--surface-border':'#1f1f1f',
+      '--muted-bg':'#0f0f0f','--up-color':'#3d8a4e','--dn-color':'#943030',
+    },
+    lightVars: {
+      '--bg':'#f9f8f2','--accent':'#7a5a00','--fg-bright':'#111111',
+      '--fg-mid':'#555555','--fg-dim':'#666666','--fg-faint':'#888888',
+      '--fg-rule':'#cccccc','--border-strong':'#d8d8d0','--border-soft':'#e4e4dc',
+      '--border-dim':'#eeeee8','--surface':'#ffffff','--surface-border':'#ddddd8',
+      '--muted-bg':'#e8e8e2','--up-color':'#2a6e38','--dn-color':'#8b2020',
+    },
+    anchors: [
+      [7500,   0, 80, 40],[8000,   8, 80, 45],[8500,  18, 80, 48],
+      [9000,  30, 82, 48],[9500,  48, 85, 48],[10000, 88, 65, 37],
+      [10500,115, 65, 32],[11000,135, 70, 27],
+    ],
+    gradient: 'linear-gradient(to right,hsl(0,80%,40%),hsl(20,80%,48%),hsl(48,85%,48%),hsl(90,65%,37%),hsl(135,70%,29%))',
+    swatches: [
+      {c:'hsl(0,80%,40%)',   l:'< 8k'},
+      {c:'hsl(25,80%,48%)',  l:'8–9.5k'},
+      {c:'hsl(48,85%,48%)',  l:'9.5–10k'},
+      {c:'hsl(90,65%,37%)',  l:'10k ✓'},
+      {c:'hsl(135,70%,29%)', l:'10.5k+'},
+    ],
+  },
+
+  // Perceptually uniform — each step looks equally different to human eyes.
+  // Purple → blue → teal → green → yellow. Colorblind-safe.
+  viridis: {
+    label: 'Viridis',
+    desc:  'perceptually uniform — colorblind-safe, scientific',
+    vars: {
+      '--bg':'#050508','--accent':'#5ec8b0','--fg-bright':'#d8e8e4',
+      '--fg-mid':'#607872','--fg-dim':'#4e5e5a','--fg-faint':'#3c4c48',
+      '--fg-rule':'#1a2a28','--border-strong':'#0d1c1a','--border-soft':'#0c1818',
+      '--border-dim':'#0b1414','--surface':'#070e0d','--surface-border':'#162422',
+      '--muted-bg':'#0a1210','--up-color':'#5ec8b0','--dn-color':'#6b3090',
+    },
+    lightVars: {
+      '--bg':'#f0f8f6','--accent':'#1e7060','--fg-bright':'#0a1e1c',
+      '--fg-mid':'#446058','--fg-dim':'#556868','--fg-faint':'#7a9890',
+      '--fg-rule':'#bee4dc','--border-strong':'#c4dcd8','--border-soft':'#d0e4e0',
+      '--border-dim':'#deedea','--surface':'#f8fffd','--surface-border':'#c8e0da',
+      '--muted-bg':'#e0f0ec','--up-color':'#1a7060','--dn-color':'#6028a0',
+    },
+    anchors: [
+      [7500, 280,66,28],[8000, 268,58,33],[8500, 248,50,37],
+      [9000, 204,49,37],[9500, 160,48,43],[10000,152,55,46],
+      [10500,100,62,52],[11000, 55,98,57],
+    ],
+    gradient: 'linear-gradient(to right,#440154,#31688e,#35b779,#fde725)',
+    swatches: [
+      {c:'#440154', l:'< 8k'},
+      {c:'#31688e', l:'8–9.5k'},
+      {c:'#35b779', l:'9.5–10k'},
+      {c:'#84d44b', l:'10k ✓'},
+      {c:'#fde725', l:'10.5k+'},
+    ],
+  },
+
+  // Perceptually uniform, high-energy. Deep indigo → magenta → orange → yellow.
+  // Maximum visual punch. Used in scientific rendering where detail matters most.
+  plasma: {
+    label: 'Plasma',
+    desc:  'high energy — violet to yellow, maximum contrast',
+    vars: {
+      '--bg':'#08050a','--accent':'#e478fa','--fg-bright':'#eeddf5',
+      '--fg-mid':'#7a6882','--fg-dim':'#5a5062','--fg-faint':'#484050',
+      '--fg-rule':'#281830','--border-strong':'#1a0e20','--border-soft':'#160c1c',
+      '--border-dim':'#120a18','--surface':'#0d0810','--surface-border':'#2a1832',
+      '--muted-bg':'#0e0812','--up-color':'#e8a030','--dn-color':'#7c02a7',
+    },
+    lightVars: {
+      '--bg':'#f8f4fc','--accent':'#7a18b8','--fg-bright':'#1a0828',
+      '--fg-mid':'#604870','--fg-dim':'#705880','--fg-faint':'#907898',
+      '--fg-rule':'#d4c0e4','--border-strong':'#d0c0e0','--border-soft':'#dcd0ee',
+      '--border-dim':'#e8e0f4','--surface':'#fcf8ff','--surface-border':'#ccc0e0',
+      '--muted-bg':'#ece0f8','--up-color':'#b05000','--dn-color':'#7000a0',
+    },
+    anchors: [
+      [7500, 243,84,28],[8000, 272,85,32],[8500, 290,80,35],
+      [9000, 315,72,38],[9500, 337,58,50],[10000, 20,90,55],
+      [10500, 42,92,56],[11000, 60,87,54],
+    ],
+    gradient: 'linear-gradient(to right,#0d0887,#7c02a7,#cc4778,#f89441,#f0f921)',
+    swatches: [
+      {c:'#0d0887', l:'< 8k'},
+      {c:'#cc4778', l:'8–9.5k'},
+      {c:'#f89441', l:'9.5–10k'},
+      {c:'#f8c541', l:'10k ✓'},
+      {c:'#f0f921', l:'10.5k+'},
+    ],
+  },
+
+  // Single-hue monochromatic amber. Design restraint — varies only in
+  // lightness and saturation. Coheres with a warm, ember-like identity.
+  ember: {
+    label: 'Ember',
+    desc:  'monochromatic — single amber hue, restrained elegance',
+    vars: {
+      '--bg':'#080502','--accent':'#cc7733','--fg-bright':'#e8d0b8',
+      '--fg-mid':'#756050','--fg-dim':'#584840','--fg-faint':'#443830',
+      '--fg-rule':'#2a1e14','--border-strong':'#1c1208','--border-soft':'#180e06',
+      '--border-dim':'#140c04','--surface':'#0d0804','--surface-border':'#2a1a0c',
+      '--muted-bg':'#0e0804','--up-color':'#e09040','--dn-color':'#501a08',
+    },
+    lightVars: {
+      '--bg':'#faf6f0','--accent':'#8a4a10','--fg-bright':'#2a1408',
+      '--fg-mid':'#705840','--fg-dim':'#7a6050','--fg-faint':'#9a8070',
+      '--fg-rule':'#e0d0c0','--border-strong':'#d8c8b8','--border-soft':'#e4d8c8',
+      '--border-dim':'#eeddd0','--surface':'#fffaf4','--surface-border':'#d8c8b0',
+      '--muted-bg':'#eee0d0','--up-color':'#8a5010','--dn-color':'#6a2008',
+    },
+    anchors: [
+      [7500,  28,30,10],[8000,  28,40,15],[8500,  28,55,22],
+      [9000,  30,65,30],[9500,  33,72,40],[10000, 36,80,50],
+      [10500, 40,85,58],[11000, 45,90,65],
+    ],
+    gradient: 'linear-gradient(to right,#1a0a03,#5c2a08,#b05a18,#e08030,#f0c060)',
+    swatches: [
+      {c:'#1a0a03', l:'< 8k'},
+      {c:'#6a3010', l:'8–9.5k'},
+      {c:'#b05a18', l:'9.5–10k'},
+      {c:'#d88030', l:'10k ✓'},
+      {c:'#f0c060', l:'10.5k+'},
+    ],
+  },
+
+  // Sequential cool blues. Inverts the convention — cool/dark is low, bright
+  // is high. Elegant and unusual; familiar from oceanographic data maps.
+  depth: {
+    label: 'Depth',
+    desc:  'sequential cool — navy to ice, inverts convention',
+    vars: {
+      '--bg':'#040810','--accent':'#4db8ff','--fg-bright':'#d0e8f8',
+      '--fg-mid':'#5a7080','--fg-dim':'#486070','--fg-faint':'#384858',
+      '--fg-rule':'#101c28','--border-strong':'#0a1828','--border-soft':'#091420',
+      '--border-dim':'#081018','--surface':'#060c18','--surface-border':'#142030',
+      '--muted-bg':'#071018','--up-color':'#4db8ff','--dn-color':'#1a3080',
+    },
+    lightVars: {
+      '--bg':'#f0f6fc','--accent':'#1a6090','--fg-bright':'#081828',
+      '--fg-mid':'#405870','--fg-dim':'#4a6878','--fg-faint':'#6a8898',
+      '--fg-rule':'#bcd4e8','--border-strong':'#c4d8e8','--border-soft':'#d0e4f0',
+      '--border-dim':'#deeef8','--surface':'#f4faff','--surface-border':'#c0d8ec',
+      '--muted-bg':'#dceef8','--up-color':'#1878b8','--dn-color':'#1020a0',
+    },
+    anchors: [
+      [7500, 220,60,18],[8000, 218,58,24],[8500, 215,60,30],
+      [9000, 205,62,36],[9500, 192,64,42],[10000,180,62,48],
+      [10500,192,70,60],[11000,200,80,72],
+    ],
+    gradient: 'linear-gradient(to right,#0a1a3a,#1a4878,#1e88a0,#38bcd8,#a0e8f8)',
+    swatches: [
+      {c:'#0a1a3a', l:'< 8k'},
+      {c:'#1a4878', l:'8–9.5k'},
+      {c:'#1e88a0', l:'9.5–10k'},
+      {c:'#38bcd8', l:'10k ✓'},
+      {c:'#a0e8f8', l:'10.5k+'},
+    ],
+  },
+};
+
+// Active anchor set (mutated when palette switches)
+let activeAnchors = PALETTES.spectral.anchors;
+let currentMode   = 'light';
+
+// ── parse ──────────────────────────────────────────────────────────────────
+function parse(raw) {
+  return raw.trim().split('\n').slice(1).map(line => {
+    const [date, steps] = line.split(',');
+    return { date: date.trim(), steps: parseInt(steps, 10) };
+  });
+}
+
+function buildMap(data) {
+  const m = {};
+  data.forEach(d => { m[d.date] = d.steps; });
+  return m;
+}
+
+// ── color ──────────────────────────────────────────────────────────────────
+function interpolateHSL(s) {
+  const A = activeAnchors;
+  if (s <= A[0][0]) return A[0].slice(1);
+  for (let i = 1; i < A.length; i++) {
+    if (s <= A[i][0]) {
+      const t = (s - A[i-1][0]) / (A[i][0] - A[i-1][0]);
+      return [
+        A[i-1][1] + t * (A[i][1] - A[i-1][1]),
+        A[i-1][2] + t * (A[i][2] - A[i-1][2]),
+        A[i-1][3] + t * (A[i][3] - A[i-1][3]),
+      ];
+    }
+  }
+  return A[A.length - 1].slice(1);
+}
+
+function stepsToColor(s) {
+  const [h, sat, l] = interpolateHSL(s);
+  return `hsl(${h.toFixed(1)},${sat.toFixed(1)}%,${l.toFixed(1)}%)`;
+}
+
+// ── formatting ─────────────────────────────────────────────────────────────
+function fmt(n) { return n.toLocaleString(); }
+
+function fmtDate(s) {
+  const [y, m, d] = s.split('-');
+  const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  return `${months[+m-1]} ${+d}, ${y}`;
+}
+
+// ── ISO week number (ISO 8601: week starts Monday, week 1 contains Jan 4) ──
+function isoWeekNum(date) {
+  const d = new Date(date.getTime());
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7)); // shift to Thursday
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+}
+
+// ── stats ──────────────────────────────────────────────────────────────────
+function calcStats(data) {
+  const total  = data.reduce((s, d) => s + d.steps, 0);
+  const avg    = Math.round(total / data.length);
+  const atGoal = data.filter(d => d.steps >= 10000).length;
+  let streak = 0;
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i].steps >= 10000) streak++;
+    else break;
+  }
+  return { total, avg, atGoal, streak, days: data.length };
+}
+
+function renderStats(stats) {
+  document.getElementById('stats').innerHTML = [
+    { val: fmt(stats.total),                                        lbl: 'total steps' },
+    { val: `${stats.atGoal} / ${stats.days}`,                      lbl: 'days at goal' },
+    { val: fmt(stats.avg),                                         lbl: 'daily average' },
+    { val: `${stats.streak} day${stats.streak !== 1 ? 's' : ''}`, lbl: 'current streak' },
+  ].map(c =>
+    `<div class="card"><div class="card-val">${c.val}</div><div class="card-lbl">${c.lbl}</div></div>`
+  ).join('');
+}
+
+// ── heatmap ────────────────────────────────────────────────────────────────
+const MONTH_NAMES = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE',
+                     'JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+const DOW_LABELS  = ['M','T','W','T','F','S','S'];
+
+function renderMonths(dataMap) {
+  const monthKeys = Array.from({ length: 12 }, (_, i) =>
+    `2026-${String(i + 1).padStart(2, '0')}`
+  );
+
+  document.getElementById('months').innerHTML = monthKeys.map((ym, mi) => {
+    const [year, month] = ym.split('-').map(Number);
+    const monthIdx    = month - 1;
+    const mm          = String(month).padStart(2, '0');
+    const firstDow    = (new Date(year, monthIdx, 1).getDay() + 6) % 7; // 0=Mon
+    const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+
+    let goalCount = 0, dataCount = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${year}-${mm}-${String(d).padStart(2, '0')}`;
+      if (dataMap[key] !== undefined) { dataCount++; if (dataMap[key] >= 10000) goalCount++; }
+    }
+
+    // DOW header with "wk" label in the first column
+    const dowHdr = `<div class="dow-lbl wk-hdr">wk</div>` +
+                   DOW_LABELS.map(d => `<div class="dow-lbl">${d}</div>`).join('');
+
+    // Build week rows
+    const numRows = Math.ceil((firstDow + daysInMonth) / 7);
+    let rows = '';
+    for (let r = 0; r < numRows; r++) {
+      // Monday of this grid row (JS handles out-of-range day values)
+      const mondayDate = new Date(year, monthIdx, r * 7 - firstDow + 1);
+      const wn = isoWeekNum(mondayDate);
+
+      let rowTotal = 0, rowCount = 0, rowCells = '';
+      for (let c = 0; c < 7; c++) {
+        const dayInMonth = r * 7 + c - firstDow + 1;
+        if (dayInMonth < 1 || dayInMonth > daysInMonth) {
+          rowCells += `<div class="cell empty"></div>`;
+        } else {
+          const key   = `${year}-${mm}-${String(dayInMonth).padStart(2, '0')}`;
+          const steps = dataMap[key];
+          if (steps !== undefined) {
+            rowCells += `<div class="cell day" style="background:${stepsToColor(steps)}"
+              data-date="${key}" data-steps="${steps}"></div>`;
+            rowTotal += steps; rowCount++;
+          } else {
+            rowCells += `<div class="cell no-data"></div>`;
+          }
+        }
+      }
+
+      const weekAvg = rowCount > 0 ? Math.round(rowTotal / rowCount) : null;
+      const wnColor = weekAvg !== null ? stepsToColor(weekAvg) : 'var(--fg-faint)';
+      const wnClass = weekAvg !== null ? 'week-num has-data' : 'week-num';
+      const wnAttrs = weekAvg !== null ? ` data-week="${wn}" data-avg="${weekAvg}"` : '';
+      rows += `<div class="week-row"><div class="${wnClass}" style="color:${wnColor}"${wnAttrs}>${wn}</div>${rowCells}</div>`;
+    }
+
+    const sub   = dataCount > 0 ? `<em>${goalCount}</em>/${dataCount} at goal` : '';
+    const delay = (mi * 0.05 + 0.3).toFixed(2);
+
+    return `<div class="month" style="animation-delay:${delay}s">
+      <div class="month-name">${MONTH_NAMES[monthIdx]}</div>
+      <div class="dow-row">${dowHdr}</div>
+      ${rows}
+      <div class="month-sub">${sub}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── legend ─────────────────────────────────────────────────────────────────
+function renderLegend(p) {
+  document.getElementById('legend').innerHTML =
+    `<span class="leg-label">steps →</span>
+     <div class="leg-grad" style="background:${p.gradient}"></div>
+     <div class="leg-items">
+       ${p.swatches.map(s =>
+         `<div class="leg-item">
+            <div class="leg-sq" style="background:${s.c}"></div>
+            <span class="leg-t">${s.l}</span>
+          </div>`
+       ).join('')}
+     </div>`;
+}
+
+// ── palette switcher ────────────────────────────────────────────────────────
+function applyPalette(key) {
+  const p    = PALETTES[key];
+  const root = document.documentElement;
+  const vars = currentMode === 'dark' ? p.vars : p.lightVars;
+  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+  activeAnchors = p.anchors;
+  document.getElementById('palette-desc').textContent = p.desc;
+  renderMonths(dataMap);
+  renderLegend(p);
+}
+
+function toggleMode() {
+  currentMode = currentMode === 'dark' ? 'light' : 'dark';
+  document.getElementById('mode-btn').textContent = currentMode === 'dark' ? 'light' : 'dark';
+  document.body.classList.toggle('light-mode', currentMode === 'light');
+  applyPalette(document.getElementById('palette-sel').value);
+}
+
+// ── year progress bar ───────────────────────────────────────────────────────
+function renderProgress(days) {
+  const pct = (days / 365 * 100).toFixed(1);
+  setTimeout(() => { document.getElementById('progress-fill').style.width = pct + '%'; }, 80);
+}
+
+// ── tooltip ─────────────────────────────────────────────────────────────────
+function setupTooltip() {
+  const tip  = document.getElementById('tip');
+  const tipD = document.getElementById('tip-d');
+  const tipS = document.getElementById('tip-s');
+  const tipG = document.getElementById('tip-g');
+  const GOAL = 10000;
+
+  document.addEventListener('mousemove', e => {
+    const cell   = e.target.closest('.cell.day');
+    const weekEl = e.target.closest('.week-num.has-data');
+
+    if (!cell && !weekEl) { tip.className = ''; return; }
+
+    if (cell) {
+      const steps = parseInt(cell.dataset.steps, 10);
+      const delta = steps - GOAL;
+      tipD.textContent = fmtDate(cell.dataset.date);
+      tipS.textContent = fmt(steps) + ' steps';
+      tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
+      tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
+    } else {
+      const wn    = weekEl.dataset.week;
+      const avg   = parseInt(weekEl.dataset.avg, 10);
+      const delta = avg - GOAL;
+      tipD.textContent = `week ${wn}`;
+      tipS.textContent = fmt(avg) + ' avg steps';
+      tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
+      tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
+    }
+    tip.className = 'show';
+
+    const W = window.innerWidth, H = window.innerHeight;
+    const TW = 220, TH = 90;
+    let x = e.clientX + 18, y = e.clientY - 62;
+    if (x + TW > W) x = e.clientX - TW - 10;
+    if (y < 0)       y = e.clientY + 18;
+    if (y + TH > H)  y = H - TH - 8;
+    tip.style.left = x + 'px';
+    tip.style.top  = y + 'px';
+  });
+}
+
+// ── init ───────────────────────────────────────────────────────────────────
+const data    = parse(CSV);
+const dataMap = buildMap(data);
+const stats   = calcStats(data);
+
+document.getElementById('days-tracked').textContent =
+  `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
+document.getElementById('palette-desc').textContent = PALETTES.spectral.desc;
+
+document.body.classList.add('light-mode');
+renderProgress(data.length);
+renderStats(stats);
+applyPalette('spectral');
+setupTooltip();
+</script>
+</body>
+</html>
