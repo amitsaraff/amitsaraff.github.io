@@ -323,6 +323,22 @@
       position: relative;
     }
 
+    /* ── min/max badges ── */
+    .cell[data-badge] { position: relative; background: transparent !important; }
+    .cell[data-badge]::after {
+      content: attr(data-badge);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(var(--c) * 0.72);
+      line-height: 1;
+      pointer-events: none;
+      z-index: 6;
+    }
+    .tip-special { font-size: 11px; color: var(--fg-mid); letter-spacing: 1px; margin-top: 2px; }
+
     .month-sub {
       color: var(--fg-dim);
       font-size: 10px;
@@ -466,73 +482,73 @@
 <script>
 // ── embedded data (mirrors steps.csv) ──────────────────────────────────────
 const CSV = `date,steps
-2026-01-01,9876
-2026-01-02,10234
-2026-01-03,8765
-2026-01-04,9012
-2026-01-05,10456
-2026-01-06,8234
-2026-01-07,9678
-2026-01-08,10789
-2026-01-09,7890
-2026-01-10,10345
-2026-01-11,9456
-2026-01-12,8901
-2026-01-13,10567
-2026-01-14,9234
-2026-01-15,8543
-2026-01-16,10678
-2026-01-17,9876
-2026-01-18,10123
-2026-01-19,8765
-2026-01-20,9456
-2026-01-21,10234
-2026-01-22,7634
-2026-01-23,9678
-2026-01-24,10345
-2026-01-25,8765
-2026-01-26,10978
-2026-01-27,9012
-2026-01-28,8234
-2026-01-29,10456
-2026-01-30,9876
-2026-01-31,10123
-2026-02-01,8765
-2026-02-02,9456
-2026-02-03,10234
-2026-02-04,7523
-2026-02-05,10856
-2026-02-06,9345
-2026-02-07,8012
-2026-02-08,10567
-2026-02-09,9876
-2026-02-10,10234
-2026-02-11,8765
-2026-02-12,9678
-2026-02-13,10456
-2026-02-14,8901
-2026-02-15,10123
-2026-02-16,9456
-2026-02-17,7789
-2026-02-18,10789
-2026-02-19,9234
-2026-02-20,8543
-2026-02-21,10678
-2026-02-22,9876
-2026-02-23,10234
-2026-02-24,8765
-2026-02-25,9012
-2026-02-26,10456
-2026-02-27,9678
-2026-02-28,10934
-2026-03-01,8765
-2026-03-02,9456
-2026-03-03,10234
-2026-03-04,7890
-2026-03-05,10789
-2026-03-06,9345
-2026-03-07,8012
-2026-03-08,10567`;
+2026-01-01,1244
+2026-01-02,6067
+2026-01-03,2588
+2026-01-04,7558
+2026-01-05,5407
+2026-01-06,8473
+2026-01-07,5000
+2026-01-08,5751
+2026-01-09,4049
+2026-01-10,10655
+2026-01-11,14849
+2026-01-12,8788
+2026-01-13,8190
+2026-01-14,9446
+2026-01-15,10714
+2026-01-16,8703
+2026-01-17,10919
+2026-01-18,8274
+2026-01-19,9125
+2026-01-20,11742
+2026-01-21,7122
+2026-01-22,8213
+2026-01-23,14278
+2026-01-24,11249
+2026-01-25,8954
+2026-01-26,7087
+2026-01-27,10740
+2026-01-28,9655
+2026-01-29,8501
+2026-01-30,9662
+2026-01-31,11468
+2026-02-01,4022
+2026-02-02,6660
+2026-02-03,8497
+2026-02-04,8037
+2026-02-05,9871
+2026-02-06,16469
+2026-02-07,20447
+2026-02-08,13599
+2026-02-09,11799
+2026-02-10,6890
+2026-02-11,9944
+2026-02-12,6864
+2026-02-13,13248
+2026-02-14,7858
+2026-02-15,7737
+2026-02-16,10065
+2026-02-17,11129
+2026-02-18,14588
+2026-02-19,11541
+2026-02-20,10612
+2026-02-21,9064
+2026-02-22,2643
+2026-02-23,12796
+2026-02-24,11919
+2026-02-25,11982
+2026-02-26,14904
+2026-02-27,14222
+2026-02-28,6547
+2026-03-01,8330
+2026-03-02,6984
+2026-03-03,10239
+2026-03-04,10274
+2026-03-05,9691
+2026-03-06,10439
+2026-03-07,9106
+2026-03-08,10268`;
 
 // ── palettes ───────────────────────────────────────────────────────────────
 // Each palette defines:
@@ -726,6 +742,15 @@ function buildMap(data) {
   return m;
 }
 
+function findMinMax(data) {
+  let minEntry = data[0], maxEntry = data[0];
+  data.forEach(d => {
+    if (d.steps < minEntry.steps) minEntry = d;
+    if (d.steps > maxEntry.steps) maxEntry = d;
+  });
+  return { minKey: minEntry.date, maxKey: maxEntry.date };
+}
+
 // ── color ──────────────────────────────────────────────────────────────────
 function interpolateHSL(s) {
   const A = activeAnchors;
@@ -835,8 +860,9 @@ function renderMonths(dataMap) {
           const key   = `${year}-${mm}-${String(dayInMonth).padStart(2, '0')}`;
           const steps = dataMap[key];
           if (steps !== undefined) {
+            const badge = key === maxKey ? ' data-badge="🔥"' : '';
             rowCells += `<div class="cell day" style="background:${stepsToColor(steps)}"
-              data-date="${key}" data-steps="${steps}"
+              data-date="${key}" data-steps="${steps}"${badge}
               role="button" tabindex="0"
               aria-label="${fmtDate(key)}: ${fmt(steps)} steps"></div>`;
             rowTotal += steps; rowCount++;
@@ -947,6 +973,11 @@ function setupTooltip() {
       tipS.textContent = fmt(steps) + ' steps';
       tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
       tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
+      const special = el.dataset.date === maxKey ? '🔥 personal best!' : '';
+      let sp = document.getElementById('tip-sp');
+      if (!sp) { sp = document.createElement('div'); sp.id = 'tip-sp'; tip.appendChild(sp); }
+      sp.className   = 'tip-special';
+      sp.textContent = special;
     } else {
       const wn    = el.dataset.week;
       const avg   = parseInt(el.dataset.avg, 10);
@@ -955,6 +986,8 @@ function setupTooltip() {
       tipS.textContent = fmt(avg) + ' avg steps';
       tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
       tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
+      const sp = document.getElementById('tip-sp');
+      if (sp) sp.textContent = '';
     }
   }
 
@@ -1005,6 +1038,7 @@ function setupTooltip() {
 const data    = parse(CSV);
 const dataMap = buildMap(data);
 const stats   = calcStats(data);
+const { minKey, maxKey } = findMinMax(data);
 
 document.getElementById('days-tracked').textContent =
   `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
