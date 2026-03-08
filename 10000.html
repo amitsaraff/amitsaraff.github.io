@@ -7,12 +7,28 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* ── scanline overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 3px,
+        rgba(0,0,0,0.07) 3px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
     body {
-      background: #0a0a0a;
-      color: #7a7a7a;
+      background: #070707;
+      color: #5a5a5a;
       font-family: monospace;
       font-size: 13px;
-      padding: 48px 28px 64px;
+      padding: 52px 32px 72px;
     }
 
     .wrap {
@@ -22,63 +38,128 @@
 
     /* ── header ── */
     h1 {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: normal;
       color: #FFD700;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
+      line-height: 1;
+      text-shadow:
+        0 0 12px rgba(255,215,0,0.55),
+        0 0 32px rgba(255,215,0,0.18),
+        0 0 64px rgba(255,215,0,0.08);
     }
-    .rule { color: #2e2e2e; }
+    .rule { color: #252525; }
     .meta {
-      color: #2e2e2e;
-      font-size: 11px;
+      color: #272727;
+      font-size: 10px;
       letter-spacing: 1.5px;
+      margin-top: 8px;
+    }
+    .meta em { color: #404040; font-style: normal; }
+
+    /* ── year progress bar ── */
+    .progress-wrap {
+      margin: 20px 0 30px;
+    }
+    .progress-track {
+      height: 2px;
+      background: #141414;
+      position: relative;
+      overflow: visible;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #FFD700;
+      box-shadow: 0 0 8px rgba(255,215,0,0.5), 0 0 20px rgba(255,215,0,0.15);
+      position: relative;
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: -3px;
+      width: 2px;
+      height: 8px;
+      background: #FFD700;
+      box-shadow: 0 0 6px rgba(255,215,0,0.8);
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
       margin-top: 6px;
     }
-    .meta em {
-      color: #484848;
-      font-style: normal;
+    .progress-labels span {
+      font-size: 8px;
+      color: #222;
+      letter-spacing: 1px;
     }
 
     /* ── stats ── */
     .stats {
       display: flex;
-      gap: 10px;
-      margin: 28px 0 36px;
+      gap: 8px;
+      margin-bottom: 40px;
       flex-wrap: wrap;
     }
     .card {
-      border: 1px solid #1c1c1c;
-      padding: 13px 17px;
+      border: 1px solid #161616;
+      padding: 14px 16px;
       flex: 1;
-      min-width: 120px;
+      min-width: 110px;
+      opacity: 0;
+      animation: fadeUp 0.5s ease both;
     }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.12s; }
+    .card:nth-child(3) { animation-delay: 0.19s; }
+    .card:nth-child(4) { animation-delay: 0.26s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     .card-val {
-      font-size: 19px;
+      font-size: 18px;
       color: #FFD700;
       letter-spacing: 1px;
+      text-shadow: 0 0 16px rgba(255,215,0,0.25);
     }
     .card-lbl {
-      font-size: 9px;
-      color: #333;
+      font-size: 8px;
+      color: #2c2c2c;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      margin-top: 6px;
+      margin-top: 7px;
     }
 
     /* ── heatmap ── */
     .months {
       display: grid;
       grid-template-columns: repeat(3, max-content);
-      gap: 36px 40px;
-      margin-bottom: 32px;
+      gap: 36px 44px;
+      margin-bottom: 36px;
+    }
+
+    .month {
+      opacity: 0;
+      animation: fadeIn 0.6s ease both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
 
     .month-name {
       color: #FFD700;
-      font-size: 10px;
-      letter-spacing: 2.5px;
+      font-size: 9px;
+      letter-spacing: 3px;
       text-transform: uppercase;
-      margin-bottom: 7px;
+      margin-bottom: 8px;
+      text-shadow: 0 0 10px rgba(255,215,0,0.2);
+      padding-bottom: 5px;
+      border-bottom: 1px solid #141414;
     }
 
     .dow-row {
@@ -88,8 +169,8 @@
       margin-bottom: 3px;
     }
     .dow-lbl {
-      font-size: 8px;
-      color: #272727;
+      font-size: 7px;
+      color: #1e1e1e;
       text-align: center;
       line-height: 15px;
     }
@@ -106,32 +187,33 @@
       border-radius: 2px;
     }
     .cell.empty   { background: transparent !important; }
-    .cell.no-data { background: #131313; }
+    .cell.no-data { background: #0f0f0f; }
     .cell.day {
       cursor: pointer;
-      transition: transform 0.1s, filter 0.1s;
+      transition: transform 0.12s, filter 0.12s;
     }
     .cell.day:hover {
-      transform: scale(1.45);
-      filter: brightness(1.3);
+      transform: scale(1.5);
+      filter: brightness(1.4) saturate(1.2);
       z-index: 10;
       position: relative;
     }
 
     .month-sub {
-      color: #282828;
-      font-size: 9px;
+      color: #1e1e1e;
+      font-size: 8px;
       letter-spacing: 1px;
-      margin-top: 6px;
+      margin-top: 7px;
     }
-    .month-sub em { color: #3d6b44; font-style: normal; }
+    .month-sub em { color: #2a4a30; font-style: normal; }
 
     /* ── tooltip ── */
     #tip {
       position: fixed;
-      background: #111;
-      border: 1px solid #252525;
-      padding: 9px 13px;
+      background: #0d0d0d;
+      border: 1px solid #1f1f1f;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 40px rgba(255,215,0,0.02);
+      padding: 10px 14px;
       font-size: 11px;
       pointer-events: none;
       opacity: 0;
@@ -141,11 +223,11 @@
       line-height: 1.7;
     }
     #tip.show { opacity: 1; }
-    .tip-date  { color: #FFD700; font-size: 10px; letter-spacing: 1px; }
-    .tip-steps { color: #e0e0e0; font-size: 15px; }
+    .tip-date  { color: #FFD700; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; }
+    .tip-steps { color: #e0e0e0; font-size: 16px; letter-spacing: 0.5px; }
     .tip-delta { font-size: 10px; }
-    .tip-delta.up { color: #4a9e5c; }
-    .tip-delta.dn { color: #b03030; }
+    .tip-delta.up { color: #3d8a4e; }
+    .tip-delta.dn { color: #943030; }
 
     /* ── legend ── */
     .legend {
@@ -153,12 +235,14 @@
       align-items: center;
       gap: 14px;
       flex-wrap: wrap;
+      padding-top: 4px;
+      border-top: 1px solid #111;
     }
-    .leg-label { color: #2a2a2a; font-size: 10px; letter-spacing: 1px; }
+    .leg-label { color: #222; font-size: 9px; letter-spacing: 1px; }
     .leg-grad {
-      width: 100px;
-      height: 9px;
-      border-radius: 2px;
+      width: 90px;
+      height: 8px;
+      border-radius: 1px;
       background: linear-gradient(to right,
         hsl(0,  80%, 40%),
         hsl(20, 80%, 48%),
@@ -166,11 +250,12 @@
         hsl(90, 65%, 37%),
         hsl(135,70%, 29%)
       );
+      box-shadow: 0 0 8px rgba(90,150,90,0.15);
     }
-    .leg-items { display: flex; gap: 14px; }
+    .leg-items { display: flex; gap: 12px; }
     .leg-item  { display: flex; align-items: center; gap: 5px; }
-    .leg-sq    { width: 9px; height: 9px; border-radius: 1px; flex-shrink: 0; }
-    .leg-t     { color: #333; font-size: 9px; }
+    .leg-sq    { width: 8px; height: 8px; border-radius: 1px; flex-shrink: 0; }
+    .leg-t     { color: #2a2a2a; font-size: 8px; }
   </style>
 </head>
 <body>
@@ -180,6 +265,15 @@
     <h1>10,000 steps <span class="rule">·</span> 2026</h1>
     <p class="meta">daily tracking // <em id="days-tracked"></em></p>
   </header>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-labels">
+      <span>jan</span><span>apr</span><span>jul</span><span>oct</span><span>dec</span>
+    </div>
+  </div>
 
   <div class="stats" id="stats"></div>
   <div class="months" id="months"></div>
@@ -318,22 +412,30 @@ const ANCHORS = [
   [11000, 135, 70, 27],
 ];
 
-function stepsToColor(s) {
-  if (s <= ANCHORS[0][0]) {
-    const [, h, sat, l] = ANCHORS[0];
-    return `hsl(${h},${sat}%,${l}%)`;
-  }
+function interpolate(s) {
+  if (s <= ANCHORS[0][0]) return ANCHORS[0].slice(1);
   for (let i = 1; i < ANCHORS.length; i++) {
     if (s <= ANCHORS[i][0]) {
       const t   = (s - ANCHORS[i-1][0]) / (ANCHORS[i][0] - ANCHORS[i-1][0]);
-      const h   = ANCHORS[i-1][1] + t * (ANCHORS[i][1] - ANCHORS[i-1][1]);
-      const sat = ANCHORS[i-1][2] + t * (ANCHORS[i][2] - ANCHORS[i-1][2]);
-      const l   = ANCHORS[i-1][3] + t * (ANCHORS[i][3] - ANCHORS[i-1][3]);
-      return `hsl(${h.toFixed(1)},${sat.toFixed(1)}%,${l.toFixed(1)}%)`;
+      return [
+        ANCHORS[i-1][1] + t * (ANCHORS[i][1] - ANCHORS[i-1][1]),
+        ANCHORS[i-1][2] + t * (ANCHORS[i][2] - ANCHORS[i-1][2]),
+        ANCHORS[i-1][3] + t * (ANCHORS[i][3] - ANCHORS[i-1][3]),
+      ];
     }
   }
-  const [, h, sat, l] = ANCHORS[ANCHORS.length - 1];
-  return `hsl(${h},${sat}%,${l}%)`;
+  return ANCHORS[ANCHORS.length - 1].slice(1);
+}
+
+function stepsToColor(s) {
+  const [h, sat, l] = interpolate(s);
+  return `hsl(${h.toFixed(1)},${sat.toFixed(1)}%,${l.toFixed(1)}%)`;
+}
+
+function stepsToGlow(s) {
+  const [h, sat, l] = interpolate(s);
+  const gl = Math.min(l + 22, 72);
+  return `hsla(${h.toFixed(1)},${sat.toFixed(1)}%,${gl.toFixed(1)}%,0.4)`;
 }
 
 // ── formatting ─────────────────────────────────────────────────────────────
@@ -351,26 +453,23 @@ function calcStats(data) {
   const avg    = Math.round(total / data.length);
   const atGoal = data.filter(d => d.steps >= 10000).length;
 
-  // streak from last day backwards
   let streak = 0;
   for (let i = data.length - 1; i >= 0; i--) {
     if (data[i].steps >= 10000) streak++;
     else break;
   }
 
-  // best single day
   const best = data.reduce((a, b) => b.steps > a.steps ? b : a);
-
   return { total, avg, atGoal, streak, best, days: data.length };
 }
 
 function renderStats(stats) {
   const el = document.getElementById('stats');
   const cards = [
-    { val: fmt(stats.total),                              lbl: 'total steps' },
-    { val: `${stats.atGoal} / ${stats.days}`,            lbl: 'days at goal' },
-    { val: fmt(stats.avg),                               lbl: 'daily average' },
-    { val: `${stats.streak} day${stats.streak !== 1 ? 's' : ''}`, lbl: 'current streak' },
+    { val: fmt(stats.total),                                          lbl: 'total steps' },
+    { val: `${stats.atGoal} / ${stats.days}`,                        lbl: 'days at goal' },
+    { val: fmt(stats.avg),                                           lbl: 'daily average' },
+    { val: `${stats.streak} day${stats.streak !== 1 ? 's' : ''}`,   lbl: 'current streak' },
   ];
   el.innerHTML = cards.map(c =>
     `<div class="card">
@@ -390,20 +489,18 @@ const DOW_LABELS = ['M','T','W','T','F','S','S'];
 function renderMonths(dataMap) {
   const el = document.getElementById('months');
 
-  // Always show all 12 months of 2026
   const monthKeys = Array.from({ length: 12 }, (_, i) =>
     `2026-${String(i + 1).padStart(2, '0')}`
   );
 
-  el.innerHTML = monthKeys.map(ym => {
+  el.innerHTML = monthKeys.map((ym, mi) => {
     const [year, month] = ym.split('-').map(Number);
     const monthIdx = month - 1;
     const mm = String(month).padStart(2, '0');
 
-    const firstDow    = (new Date(year, monthIdx, 1).getDay() + 6) % 7; // Mon = 0
+    const firstDow    = (new Date(year, monthIdx, 1).getDay() + 6) % 7;
     const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
 
-    // Month stats
     let goalCount = 0, dataCount = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       const key = `${year}-${mm}-${String(d).padStart(2, '0')}`;
@@ -413,41 +510,43 @@ function renderMonths(dataMap) {
       }
     }
 
-    // DOW header
-    const dowHdr = DOW_LABELS
-      .map(d => `<div class="dow-lbl">${d}</div>`)
-      .join('');
+    const dowHdr = DOW_LABELS.map(d => `<div class="dow-lbl">${d}</div>`).join('');
 
-    // Cells
     let cells = '';
-    for (let i = 0; i < firstDow; i++) {
-      cells += `<div class="cell empty"></div>`;
-    }
+    for (let i = 0; i < firstDow; i++) cells += `<div class="cell empty"></div>`;
     for (let day = 1; day <= daysInMonth; day++) {
       const key   = `${year}-${mm}-${String(day).padStart(2, '0')}`;
       const steps = dataMap[key];
       if (steps !== undefined) {
         const color = stepsToColor(steps);
+        const glow  = stepsToGlow(steps);
         cells += `<div class="cell day"
-          style="background:${color}"
-          data-date="${key}"
-          data-steps="${steps}"></div>`;
+          style="background:${color};box-shadow:0 0 6px ${glow},0 0 12px ${glow}"
+          data-date="${key}" data-steps="${steps}"></div>`;
       } else {
         cells += `<div class="cell no-data"></div>`;
       }
     }
 
-    const goalFraction = dataCount > 0
-      ? `<em>${goalCount}</em>/${dataCount} at goal`
-      : '';
+    const sub = dataCount > 0 ? `<em>${goalCount}</em>/${dataCount} at goal` : '';
+    const delay = (mi * 0.05 + 0.3).toFixed(2);
 
-    return `<div class="month">
+    return `<div class="month" style="animation-delay:${delay}s">
       <div class="month-name">${MONTH_NAMES[monthIdx]}</div>
       <div class="dow-row">${dowHdr}</div>
       <div class="grid">${cells}</div>
-      <div class="month-sub">${goalFraction}</div>
+      <div class="month-sub">${sub}</div>
     </div>`;
   }).join('');
+}
+
+// ── year progress bar ──────────────────────────────────────────────────────
+function renderProgress(days) {
+  const pct = (days / 365 * 100).toFixed(1);
+  // animate after a short delay so the transition fires
+  setTimeout(() => {
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }, 80);
 }
 
 // ── tooltip ────────────────────────────────────────────────────────────────
@@ -464,9 +563,11 @@ function setupTooltip() {
 
     const steps = parseInt(cell.dataset.steps, 10);
     const delta = steps - GOAL;
+    const glow  = stepsToGlow(steps);
 
     tipD.textContent = fmtDate(cell.dataset.date);
     tipS.textContent = fmt(steps) + ' steps';
+    tip.style.borderColor = stepsToColor(steps).replace('hsl', 'hsla').replace(')', ',0.35)');
 
     if (delta >= 0) {
       tipG.textContent = '+' + fmt(delta) + ' above goal';
@@ -478,11 +579,10 @@ function setupTooltip() {
 
     tip.className = 'show';
 
-    // Position: keep inside viewport
     const W = window.innerWidth, H = window.innerHeight;
-    const TW = 190, TH = 70;
-    let x = e.clientX + 18, y = e.clientY - 56;
-    if (x + TW > W) x = e.clientX - TW - 8;
+    const TW = 200, TH = 75;
+    let x = e.clientX + 18, y = e.clientY - 58;
+    if (x + TW > W) x = e.clientX - TW - 10;
     if (y < 0)       y = e.clientY + 18;
     if (y + TH > H)  y = H - TH - 8;
 
@@ -499,6 +599,7 @@ const stats   = calcStats(data);
 document.getElementById('days-tracked').textContent =
   `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
 
+renderProgress(data.length);
 renderStats(stats);
 renderMonths(dataMap);
 setupTooltip();
