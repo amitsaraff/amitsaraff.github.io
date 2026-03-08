@@ -374,7 +374,7 @@
           <option value="ember">Ember</option>
           <option value="depth">Depth</option>
         </select>
-        <button id="mode-btn" onclick="toggleMode()">light</button>
+        <button id="mode-btn" onclick="toggleMode()">dark</button>
       </div>
     </div>
     <p class="meta">daily tracking // <em id="days-tracked"></em></p>
@@ -656,7 +656,7 @@ const PALETTES = {
 
 // Active anchor set (mutated when palette switches)
 let activeAnchors = PALETTES.spectral.anchors;
-let currentMode   = 'dark';
+let currentMode   = 'light';
 
 // ── parse ──────────────────────────────────────────────────────────────────
 function parse(raw) {
@@ -900,10 +900,10 @@ document.getElementById('days-tracked').textContent =
   `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
 document.getElementById('palette-desc').textContent = PALETTES.spectral.desc;
 
+document.body.classList.add('light-mode');
 renderProgress(data.length);
 renderStats(stats);
-renderMonths(dataMap);
-renderLegend(PALETTES.spectral);
+applyPalette('spectral');
 setupTooltip();
 </script>
 </body>
