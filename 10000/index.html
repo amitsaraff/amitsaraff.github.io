@@ -91,18 +91,34 @@
     }
     .rule { color: var(--fg-rule); }
 
-    /* ── palette selector ── */
-    .sel-wrap {
+    /* ── settings bar ── */
+    .settings {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border-dim);
+      transition: border-color 0.4s ease;
+    }
+    .settings-lbl {
+      font-size: 10px;
+      color: var(--fg-faint);
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+      transition: color 0.4s ease;
+    }
+    .settings-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .sel-lbl {
+    .settings-item-lbl {
       font-size: 10px;
       color: var(--fg-faint);
       letter-spacing: 1px;
+      transition: color 0.4s ease;
     }
+
+    /* ── palette selector ── */
     #palette-sel {
       background: transparent;
       border: 1px solid var(--border-strong);
@@ -117,16 +133,16 @@
       -webkit-appearance: none;
       transition: border-color 0.3s, color 0.3s;
     }
-    #palette-sel option { background: #111; color: #ddd; }
+    #palette-sel option { background: var(--surface); color: var(--fg-bright); }
+    #palette-sel:hover { border-color: var(--accent); }
 
     #mode-btn {
       background: transparent;
       border: 1px solid var(--border-strong);
       color: var(--fg-faint);
-      font-family: monospace;
-      font-size: 10px;
-      padding: 5px 10px;
-      letter-spacing: 1.5px;
+      font-size: 15px;
+      padding: 2px 8px;
+      line-height: 1;
       cursor: pointer;
       outline: none;
       transition: border-color 0.3s, color 0.3s;
@@ -228,6 +244,8 @@
     .month {
       opacity: 0;
       animation: fadeIn 0.6s ease both;
+      display: flex;
+      flex-direction: column;
     }
     @keyframes fadeIn {
       from { opacity: 0; }
@@ -276,8 +294,9 @@
       padding-right: 3px;
       transition: color 0.4s ease;
     }
-    .week-num.has-data { cursor: pointer; }
+    .week-num.has-data { cursor: pointer; touch-action: manipulation; }
     .week-num.has-data:hover { filter: brightness(1.5); }
+    .cell.day { touch-action: manipulation; }
 
     .cell {
       width: var(--c);
@@ -301,18 +320,34 @@
       color: var(--fg-dim);
       font-size: 10px;
       letter-spacing: 1px;
-      margin-top: 8px;
+      margin-top: auto;
+      padding-top: 8px;
+      padding-left: calc(var(--wc) + var(--cg));
       transition: color 0.4s ease;
     }
     .month-sub em { color: var(--up-color); font-style: normal; transition: color 0.4s ease; }
 
-    /* ── palette description ── */
-    .palette-desc {
-      font-size: 10px;
+    /* ── empty months group ── */
+    .empty-group { grid-column: 1 / -1; }
+    .empty-group-hdr {
+      cursor: pointer;
       color: var(--fg-faint);
-      letter-spacing: 1px;
-      margin-top: 4px;
-      min-height: 14px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 8px 0;
+      border-top: 1px solid var(--border-dim);
+      user-select: none;
+      transition: color 0.3s;
+    }
+    .empty-group-hdr:hover { color: var(--fg-dim); }
+    .empty-group-hdr::after { content: '  [+]'; }
+    .empty-group:not(.collapsed) .empty-group-hdr::after { content: '  [−]'; }
+    .empty-group.collapsed .empty-group-grid { display: none; }
+    .empty-group-grid {
+      display: grid;
+      grid-template-columns: repeat(3, var(--mw));
+      gap: 44px var(--mg);
+      margin-top: 32px;
     }
 
     /* ── tooltip ── */
@@ -325,7 +360,7 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.08s;
-      z-index: 999;
+      z-index: 9999;
       white-space: nowrap;
       line-height: 1.7;
     }
@@ -338,17 +373,14 @@
 
     /* ── legend ── */
     .legend {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
+      display: inline-flex;
+      flex-direction: column;
+      gap: 10px;
       padding-top: 6px;
       border-top: 1px solid var(--border-dim);
       transition: border-color 0.4s ease;
     }
-    .leg-label { color: var(--fg-dim); font-size: 14px; letter-spacing: 1px; }
     .leg-grad {
-      width: 150px;
       height: 15px;
       border-radius: 2px;
       transition: background 0.4s ease;
@@ -357,28 +389,34 @@
     .leg-item  { display: flex; align-items: center; gap: 7px; }
     .leg-sq    { width: 15px; height: 15px; border-radius: 2px; flex-shrink: 0; transition: background 0.4s ease; }
     .leg-t     { color: var(--fg-dim); font-size: 14px; }
+
+    /* ── mobile ── */
+    @media (max-width: 640px) {
+      :root {
+        --c:  calc((100vw - 71px) / 7);
+        --wc: 18px;
+        --cg:  3px;
+        --mg:  0px;
+      }
+      body { padding: 40px 16px 60px; }
+      .wrap { max-width: 100%; }
+      h1 { font-size: 24px; letter-spacing: 2px; }
+      .months { grid-template-columns: 1fr; gap: 32px; }
+      .empty-group-grid { grid-template-columns: 1fr; gap: 32px; }
+      .card { flex: 1 1 calc(50% - 5px); min-width: 0; }
+      .meta { font-size: 10px; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; }
+      .leg-items { gap: 8px; flex-wrap: nowrap; }
+      .leg-sq { width: 10px; height: 10px; }
+      .leg-t  { font-size: 10px; white-space: nowrap; }
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <div class="header-row">
-      <h1>10,000 steps <span class="rule">·</span> 2026</h1>
-      <div class="sel-wrap">
-        <span class="sel-lbl">palette</span>
-        <select id="palette-sel" onchange="applyPalette(this.value)">
-          <option value="spectral">Spectral</option>
-          <option value="viridis">Viridis</option>
-          <option value="plasma">Plasma</option>
-          <option value="ember">Ember</option>
-          <option value="depth">Depth</option>
-        </select>
-        <button id="mode-btn" onclick="toggleMode()">dark</button>
-      </div>
-    </div>
+    <h1>10,000 steps <span class="rule">·</span> 2026</h1>
     <p class="meta">daily tracking // <em id="days-tracked"></em></p>
-    <p class="palette-desc" id="palette-desc"></p>
   </header>
 
   <div class="progress-wrap">
@@ -393,6 +431,22 @@
   <div class="stats" id="stats"></div>
   <div class="months" id="months"></div>
   <div class="legend" id="legend"></div>
+
+  <div class="settings">
+    <div class="settings-lbl">// settings</div>
+    <div class="settings-row">
+      <span class="settings-item-lbl">palette</span>
+      <select id="palette-sel">
+        <option value="spectral">Spectral</option>
+        <option value="viridis">Viridis</option>
+        <option value="plasma">Plasma</option>
+        <option value="ember">Ember</option>
+        <option value="depth">Depth</option>
+      </select>
+      <span class="settings-item-lbl">mode</span>
+      <button id="mode-btn">☾</button>
+    </div>
+  </div>
 
 </div>
 
@@ -486,8 +540,6 @@ const PALETTES = {
   // Traffic-light semantics: warm below goal, cool above.
   // Most intuitive — red = bad, green = good. High contrast at goal boundary.
   spectral: {
-    label: 'Spectral',
-    desc:  'traffic light — warm below goal, cool above',
     vars: {
       '--bg':'#070707','--accent':'#FFD700','--fg-bright':'#e0e0e0',
       '--fg-mid':'#707070','--fg-dim':'#585858','--fg-faint':'#444444',
@@ -520,8 +572,6 @@ const PALETTES = {
   // Perceptually uniform — each step looks equally different to human eyes.
   // Purple → blue → teal → green → yellow. Colorblind-safe.
   viridis: {
-    label: 'Viridis',
-    desc:  'perceptually uniform — colorblind-safe, scientific',
     vars: {
       '--bg':'#050508','--accent':'#5ec8b0','--fg-bright':'#d8e8e4',
       '--fg-mid':'#607872','--fg-dim':'#4e5e5a','--fg-faint':'#3c4c48',
@@ -554,8 +604,6 @@ const PALETTES = {
   // Perceptually uniform, high-energy. Deep indigo → magenta → orange → yellow.
   // Maximum visual punch. Used in scientific rendering where detail matters most.
   plasma: {
-    label: 'Plasma',
-    desc:  'high energy — violet to yellow, maximum contrast',
     vars: {
       '--bg':'#08050a','--accent':'#e478fa','--fg-bright':'#eeddf5',
       '--fg-mid':'#7a6882','--fg-dim':'#5a5062','--fg-faint':'#484050',
@@ -588,8 +636,6 @@ const PALETTES = {
   // Single-hue monochromatic amber. Design restraint — varies only in
   // lightness and saturation. Coheres with a warm, ember-like identity.
   ember: {
-    label: 'Ember',
-    desc:  'monochromatic — single amber hue, restrained elegance',
     vars: {
       '--bg':'#080502','--accent':'#cc7733','--fg-bright':'#e8d0b8',
       '--fg-mid':'#756050','--fg-dim':'#584840','--fg-faint':'#443830',
@@ -622,8 +668,6 @@ const PALETTES = {
   // Sequential cool blues. Inverts the convention — cool/dark is low, bright
   // is high. Elegant and unusual; familiar from oceanographic data maps.
   depth: {
-    label: 'Depth',
-    desc:  'sequential cool — navy to ice, inverts convention',
     vars: {
       '--bg':'#040810','--accent':'#4db8ff','--fg-bright':'#d0e8f8',
       '--fg-mid':'#5a7080','--fg-dim':'#486070','--fg-faint':'#384858',
@@ -654,9 +698,12 @@ const PALETTES = {
   },
 };
 
+const GOAL = 10000;
+
 // Active anchor set (mutated when palette switches)
-let activeAnchors = PALETTES.spectral.anchors;
-let currentMode   = 'light';
+let activeAnchors  = PALETTES.spectral.anchors;
+let currentMode    = 'light';
+let currentPalette = 'spectral';
 
 // ── parse ──────────────────────────────────────────────────────────────────
 function parse(raw) {
@@ -746,7 +793,9 @@ function renderMonths(dataMap) {
     `2026-${String(i + 1).padStart(2, '0')}`
   );
 
-  document.getElementById('months').innerHTML = monthKeys.map((ym, mi) => {
+  const dataHtml = [], emptyHtml = [];
+
+  monthKeys.forEach((ym, mi) => {
     const [year, month] = ym.split('-').map(Number);
     const monthIdx    = month - 1;
     const mm          = String(month).padStart(2, '0');
@@ -767,7 +816,6 @@ function renderMonths(dataMap) {
     const numRows = Math.ceil((firstDow + daysInMonth) / 7);
     let rows = '';
     for (let r = 0; r < numRows; r++) {
-      // Monday of this grid row (JS handles out-of-range day values)
       const mondayDate = new Date(year, monthIdx, r * 7 - firstDow + 1);
       const wn = isoWeekNum(mondayDate);
 
@@ -798,21 +846,34 @@ function renderMonths(dataMap) {
 
     const sub   = dataCount > 0 ? `<em>${goalCount}</em>/${dataCount} at goal` : '';
     const delay = (mi * 0.05 + 0.3).toFixed(2);
-
-    return `<div class="month" style="animation-delay:${delay}s">
+    const html  = `<div class="month" style="animation-delay:${delay}s">
       <div class="month-name">${MONTH_NAMES[monthIdx]}</div>
       <div class="dow-row">${dowHdr}</div>
       ${rows}
       <div class="month-sub">${sub}</div>
     </div>`;
-  }).join('');
+
+    if (dataCount > 0) dataHtml.push(html);
+    else               emptyHtml.push(html);
+  });
+
+  let out = dataHtml.join('');
+  if (emptyHtml.length > 0) {
+    const n   = emptyHtml.length;
+    const lbl = `${n} month${n !== 1 ? 's' : ''} · no data`;
+    out += `<div class="empty-group collapsed">
+      <div class="empty-group-hdr">${lbl}</div>
+      <div class="empty-group-grid">${emptyHtml.join('')}</div>
+    </div>`;
+  }
+
+  document.getElementById('months').innerHTML = out;
 }
 
 // ── legend ─────────────────────────────────────────────────────────────────
 function renderLegend(p) {
   document.getElementById('legend').innerHTML =
-    `<span class="leg-label">steps →</span>
-     <div class="leg-grad" style="background:${p.gradient}"></div>
+    `<div class="leg-grad" style="background:${p.gradient}"></div>
      <div class="leg-items">
        ${p.swatches.map(s =>
          `<div class="leg-item">
@@ -829,17 +890,18 @@ function applyPalette(key) {
   const root = document.documentElement;
   const vars = currentMode === 'dark' ? p.vars : p.lightVars;
   Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
-  activeAnchors = p.anchors;
-  document.getElementById('palette-desc').textContent = p.desc;
+  activeAnchors  = p.anchors;
+  currentPalette = key;
+  document.getElementById('palette-sel').value = key;
   renderMonths(dataMap);
   renderLegend(p);
 }
 
 function toggleMode() {
   currentMode = currentMode === 'dark' ? 'light' : 'dark';
-  document.getElementById('mode-btn').textContent = currentMode === 'dark' ? 'light' : 'dark';
+  document.getElementById('mode-btn').textContent = currentMode === 'dark' ? '☀' : '☾';
   document.body.classList.toggle('light-mode', currentMode === 'light');
-  applyPalette(document.getElementById('palette-sel').value);
+  applyPalette(currentPalette);
 }
 
 // ── year progress bar ───────────────────────────────────────────────────────
@@ -854,41 +916,67 @@ function setupTooltip() {
   const tipD = document.getElementById('tip-d');
   const tipS = document.getElementById('tip-s');
   const tipG = document.getElementById('tip-g');
-  const GOAL = 10000;
 
-  document.addEventListener('mousemove', e => {
-    const cell   = e.target.closest('.cell.day');
-    const weekEl = e.target.closest('.week-num.has-data');
-
-    if (!cell && !weekEl) { tip.className = ''; return; }
-
-    if (cell) {
-      const steps = parseInt(cell.dataset.steps, 10);
+  function fillTip(el) {
+    if (el.classList.contains('day')) {
+      const steps = parseInt(el.dataset.steps, 10);
       const delta = steps - GOAL;
-      tipD.textContent = fmtDate(cell.dataset.date);
+      tipD.textContent = fmtDate(el.dataset.date);
       tipS.textContent = fmt(steps) + ' steps';
       tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
       tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
     } else {
-      const wn    = weekEl.dataset.week;
-      const avg   = parseInt(weekEl.dataset.avg, 10);
+      const wn    = el.dataset.week;
+      const avg   = parseInt(el.dataset.avg, 10);
       const delta = avg - GOAL;
-      tipD.textContent = `week ${wn}`;
+      tipD.textContent = 'week ' + wn;
       tipS.textContent = fmt(avg) + ' avg steps';
       tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
       tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
     }
-    tip.className = 'show';
+  }
 
-    const W = window.innerWidth, H = window.innerHeight;
-    const TW = 220, TH = 90;
-    let x = e.clientX + 18, y = e.clientY - 62;
-    if (x + TW > W) x = e.clientX - TW - 10;
-    if (y < 0)       y = e.clientY + 18;
-    if (y + TH > H)  y = H - TH - 8;
+  function posTip(el) {
+    tip.className = 'show';
+    const r  = el.getBoundingClientRect();
+    const TW = tip.offsetWidth  || 220;
+    const TH = tip.offsetHeight || 90;
+    const W  = window.innerWidth;
+    const H  = window.innerHeight;
+    let x = r.left + r.width  / 2 - TW / 2;
+    let y = r.top  - TH - 8;
+    x = Math.max(8, Math.min(W - TW - 8, x));
+    if (y < 8)          y = r.bottom + 8;
+    if (y + TH > H - 8) y = H - TH - 8;
     tip.style.left = x + 'px';
     tip.style.top  = y + 'px';
+  }
+
+  let activeEl = null;
+
+  // Desktop: anchor tip to element on hover
+  document.addEventListener('mouseover', e => {
+    const cell   = e.target.closest('.cell.day');
+    const weekEl = e.target.closest('.week-num.has-data');
+    const target = cell || weekEl;
+    if (target === activeEl) return;
+    activeEl = target;
+    if (!target) { tip.className = ''; return; }
+    fillTip(target);
+    posTip(target);
   });
+
+  // Mobile: show tip on tap, hide on tap elsewhere
+  document.addEventListener('touchstart', e => {
+    const cell   = e.target.closest('.cell.day');
+    const weekEl = e.target.closest('.week-num.has-data');
+    const target = cell || weekEl;
+    if (!target) { tip.className = ''; activeEl = null; return; }
+    e.preventDefault();
+    activeEl = target;
+    fillTip(target);
+    posTip(target);
+  }, { passive: false });
 }
 
 // ── init ───────────────────────────────────────────────────────────────────
@@ -898,13 +986,18 @@ const stats   = calcStats(data);
 
 document.getElementById('days-tracked').textContent =
   `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
-document.getElementById('palette-desc').textContent = PALETTES.spectral.desc;
-
 document.body.classList.add('light-mode');
 renderProgress(data.length);
 renderStats(stats);
 applyPalette('spectral');
 setupTooltip();
+
+document.getElementById('palette-sel').addEventListener('change', e => applyPalette(e.target.value));
+document.getElementById('mode-btn').addEventListener('click', toggleMode);
+document.getElementById('months').addEventListener('click', e => {
+  const hdr = e.target.closest('.empty-group-hdr');
+  if (hdr) hdr.closest('.empty-group').classList.toggle('collapsed');
+});
 </script>
 </body>
 </html>
