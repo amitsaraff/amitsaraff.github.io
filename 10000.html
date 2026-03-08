@@ -12,7 +12,8 @@
       --c:  24px;   /* cell size  (+26%) */
       --cg:  4px;   /* cell gap */
       --mg: 50px;   /* month column gap */
-      --mw: calc(7 * var(--c) + 6 * var(--cg));  /* 192px per month grid */
+      --wc: 20px;   /* week number column */
+      --mw: calc(var(--wc) + var(--cg) + 7 * var(--c) + 6 * var(--cg));  /* 216px per month grid */
 
       /* ── theme (overridden per-palette by JS) ── */
       --bg:              #070707;
@@ -58,7 +59,7 @@
     }
 
     .wrap {
-      max-width: calc(3 * var(--mw) + 2 * var(--mg));  /* 676px: edge-to-edge */
+      max-width: calc(3 * var(--mw) + 2 * var(--mg));  /* 748px: edge-to-edge */
       margin: 0 auto;
     }
 
@@ -222,7 +223,7 @@
 
     .dow-row {
       display: grid;
-      grid-template-columns: repeat(7, var(--c));
+      grid-template-columns: var(--wc) repeat(7, var(--c));
       gap: var(--cg);
       margin-bottom: 4px;
     }
@@ -233,12 +234,25 @@
       line-height: var(--c);
       transition: color 0.4s ease;
     }
+    .wk-hdr { font-size: 9px; text-align: right; padding-right: 3px; }
 
-    .grid {
+    .week-row {
       display: grid;
-      grid-template-columns: repeat(7, var(--c));
+      grid-template-columns: var(--wc) repeat(7, var(--c));
       gap: var(--cg);
     }
+    .week-num {
+      width: var(--wc);
+      height: var(--c);
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 3px;
+      transition: color 0.4s ease;
+    }
+    .week-num.has-data { cursor: pointer; }
+    .week-num.has-data:hover { filter: brightness(1.5); }
 
     .cell {
       width: var(--c);
@@ -627,6 +641,15 @@ function fmtDate(s) {
   return `${months[+m-1]} ${+d}, ${y}`;
 }
 
+// ── ISO week number (ISO 8601: week starts Monday, week 1 contains Jan 4) ──
+function isoWeekNum(date) {
+  const d = new Date(date.getTime());
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7)); // shift to Thursday
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+}
+
 // ── stats ──────────────────────────────────────────────────────────────────
 function calcStats(data) {
   const total  = data.reduce((s, d) => s + d.steps, 0);
@@ -665,7 +688,7 @@ function renderMonths(dataMap) {
     const [year, month] = ym.split('-').map(Number);
     const monthIdx    = month - 1;
     const mm          = String(month).padStart(2, '0');
-    const firstDow    = (new Date(year, monthIdx, 1).getDay() + 6) % 7;
+    const firstDow    = (new Date(year, monthIdx, 1).getDay() + 6) % 7; // 0=Mon
     const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
 
     let goalCount = 0, dataCount = 0;
@@ -674,19 +697,41 @@ function renderMonths(dataMap) {
       if (dataMap[key] !== undefined) { dataCount++; if (dataMap[key] >= 10000) goalCount++; }
     }
 
-    const dowHdr = DOW_LABELS.map(d => `<div class="dow-lbl">${d}</div>`).join('');
+    // DOW header with "wk" label in the first column
+    const dowHdr = `<div class="dow-lbl wk-hdr">wk</div>` +
+                   DOW_LABELS.map(d => `<div class="dow-lbl">${d}</div>`).join('');
 
-    let cells = '';
-    for (let i = 0; i < firstDow; i++) cells += `<div class="cell empty"></div>`;
-    for (let day = 1; day <= daysInMonth; day++) {
-      const key   = `${year}-${mm}-${String(day).padStart(2, '0')}`;
-      const steps = dataMap[key];
-      if (steps !== undefined) {
-        cells += `<div class="cell day" style="background:${stepsToColor(steps)}"
-          data-date="${key}" data-steps="${steps}"></div>`;
-      } else {
-        cells += `<div class="cell no-data"></div>`;
+    // Build week rows
+    const numRows = Math.ceil((firstDow + daysInMonth) / 7);
+    let rows = '';
+    for (let r = 0; r < numRows; r++) {
+      // Monday of this grid row (JS handles out-of-range day values)
+      const mondayDate = new Date(year, monthIdx, r * 7 - firstDow + 1);
+      const wn = isoWeekNum(mondayDate);
+
+      let rowTotal = 0, rowCount = 0, rowCells = '';
+      for (let c = 0; c < 7; c++) {
+        const dayInMonth = r * 7 + c - firstDow + 1;
+        if (dayInMonth < 1 || dayInMonth > daysInMonth) {
+          rowCells += `<div class="cell empty"></div>`;
+        } else {
+          const key   = `${year}-${mm}-${String(dayInMonth).padStart(2, '0')}`;
+          const steps = dataMap[key];
+          if (steps !== undefined) {
+            rowCells += `<div class="cell day" style="background:${stepsToColor(steps)}"
+              data-date="${key}" data-steps="${steps}"></div>`;
+            rowTotal += steps; rowCount++;
+          } else {
+            rowCells += `<div class="cell no-data"></div>`;
+          }
+        }
       }
+
+      const weekAvg = rowCount > 0 ? Math.round(rowTotal / rowCount) : null;
+      const wnColor = weekAvg !== null ? stepsToColor(weekAvg) : 'var(--fg-faint)';
+      const wnClass = weekAvg !== null ? 'week-num has-data' : 'week-num';
+      const wnAttrs = weekAvg !== null ? ` data-week="${wn}" data-avg="${weekAvg}"` : '';
+      rows += `<div class="week-row"><div class="${wnClass}" style="color:${wnColor}"${wnAttrs}>${wn}</div>${rowCells}</div>`;
     }
 
     const sub   = dataCount > 0 ? `<em>${goalCount}</em>/${dataCount} at goal` : '';
@@ -695,7 +740,7 @@ function renderMonths(dataMap) {
     return `<div class="month" style="animation-delay:${delay}s">
       <div class="month-name">${MONTH_NAMES[monthIdx]}</div>
       <div class="dow-row">${dowHdr}</div>
-      <div class="grid">${cells}</div>
+      ${rows}
       <div class="month-sub">${sub}</div>
     </div>`;
   }).join('');
@@ -742,16 +787,28 @@ function setupTooltip() {
   const GOAL = 10000;
 
   document.addEventListener('mousemove', e => {
-    const cell = e.target.closest('.cell.day');
-    if (!cell) { tip.className = ''; return; }
+    const cell   = e.target.closest('.cell.day');
+    const weekEl = e.target.closest('.week-num.has-data');
 
-    const steps = parseInt(cell.dataset.steps, 10);
-    const delta = steps - GOAL;
-    tipD.textContent = fmtDate(cell.dataset.date);
-    tipS.textContent = fmt(steps) + ' steps';
-    tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
-    tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
-    tip.className    = 'show';
+    if (!cell && !weekEl) { tip.className = ''; return; }
+
+    if (cell) {
+      const steps = parseInt(cell.dataset.steps, 10);
+      const delta = steps - GOAL;
+      tipD.textContent = fmtDate(cell.dataset.date);
+      tipS.textContent = fmt(steps) + ' steps';
+      tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
+      tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
+    } else {
+      const wn    = weekEl.dataset.week;
+      const avg   = parseInt(weekEl.dataset.avg, 10);
+      const delta = avg - GOAL;
+      tipD.textContent = `week ${wn}`;
+      tipS.textContent = fmt(avg) + ' avg steps';
+      tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
+      tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
+    }
+    tip.className = 'show';
 
     const W = window.innerWidth, H = window.innerHeight;
     const TW = 220, TH = 90;
