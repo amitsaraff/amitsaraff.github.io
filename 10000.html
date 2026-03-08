@@ -13,6 +13,7 @@
       --cg:  4px;   /* cell gap */
       --mg: 50px;   /* month column gap */
       --wc: 20px;   /* week number column */
+      --wg:  3px;   /* inter-week-row gap */
       --mw: calc(var(--wc) + var(--cg) + 7 * var(--c) + 6 * var(--cg));  /* 216px per month grid */
 
       /* ── theme (overridden per-palette by JS) ── */
@@ -47,6 +48,15 @@
       );
       pointer-events: none;
       z-index: 9998;
+    }
+    body.light-mode::after {
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 3px,
+        rgba(0,0,0,0.025) 3px,
+        rgba(0,0,0,0.025) 4px
+      );
     }
 
     body {
@@ -108,6 +118,20 @@
       transition: border-color 0.3s, color 0.3s;
     }
     #palette-sel option { background: #111; color: #ddd; }
+
+    #mode-btn {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--fg-faint);
+      font-family: monospace;
+      font-size: 10px;
+      padding: 5px 10px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.3s, color 0.3s;
+    }
+    #mode-btn:hover { color: var(--accent); border-color: var(--accent); }
 
     .meta {
       color: var(--fg-dim);
@@ -240,6 +264,7 @@
       display: grid;
       grid-template-columns: var(--wc) repeat(7, var(--c));
       gap: var(--cg);
+      margin-bottom: var(--wg);
     }
     .week-num {
       width: var(--wc);
@@ -349,6 +374,7 @@
           <option value="ember">Ember</option>
           <option value="depth">Depth</option>
         </select>
+        <button id="mode-btn" onclick="toggleMode()">light</button>
       </div>
     </div>
     <p class="meta">daily tracking // <em id="days-tracked"></em></p>
@@ -469,6 +495,13 @@ const PALETTES = {
       '--border-dim':'#111111','--surface':'#0d0d0d','--surface-border':'#1f1f1f',
       '--muted-bg':'#0f0f0f','--up-color':'#3d8a4e','--dn-color':'#943030',
     },
+    lightVars: {
+      '--bg':'#f9f8f2','--accent':'#7a5a00','--fg-bright':'#111111',
+      '--fg-mid':'#555555','--fg-dim':'#666666','--fg-faint':'#888888',
+      '--fg-rule':'#cccccc','--border-strong':'#d8d8d0','--border-soft':'#e4e4dc',
+      '--border-dim':'#eeeee8','--surface':'#ffffff','--surface-border':'#ddddd8',
+      '--muted-bg':'#e8e8e2','--up-color':'#2a6e38','--dn-color':'#8b2020',
+    },
     anchors: [
       [7500,   0, 80, 40],[8000,   8, 80, 45],[8500,  18, 80, 48],
       [9000,  30, 82, 48],[9500,  48, 85, 48],[10000, 88, 65, 37],
@@ -495,6 +528,13 @@ const PALETTES = {
       '--fg-rule':'#1a2a28','--border-strong':'#0d1c1a','--border-soft':'#0c1818',
       '--border-dim':'#0b1414','--surface':'#070e0d','--surface-border':'#162422',
       '--muted-bg':'#0a1210','--up-color':'#5ec8b0','--dn-color':'#6b3090',
+    },
+    lightVars: {
+      '--bg':'#f0f8f6','--accent':'#1e7060','--fg-bright':'#0a1e1c',
+      '--fg-mid':'#446058','--fg-dim':'#556868','--fg-faint':'#7a9890',
+      '--fg-rule':'#bee4dc','--border-strong':'#c4dcd8','--border-soft':'#d0e4e0',
+      '--border-dim':'#deedea','--surface':'#f8fffd','--surface-border':'#c8e0da',
+      '--muted-bg':'#e0f0ec','--up-color':'#1a7060','--dn-color':'#6028a0',
     },
     anchors: [
       [7500, 280,66,28],[8000, 268,58,33],[8500, 248,50,37],
@@ -523,6 +563,13 @@ const PALETTES = {
       '--border-dim':'#120a18','--surface':'#0d0810','--surface-border':'#2a1832',
       '--muted-bg':'#0e0812','--up-color':'#e8a030','--dn-color':'#7c02a7',
     },
+    lightVars: {
+      '--bg':'#f8f4fc','--accent':'#7a18b8','--fg-bright':'#1a0828',
+      '--fg-mid':'#604870','--fg-dim':'#705880','--fg-faint':'#907898',
+      '--fg-rule':'#d4c0e4','--border-strong':'#d0c0e0','--border-soft':'#dcd0ee',
+      '--border-dim':'#e8e0f4','--surface':'#fcf8ff','--surface-border':'#ccc0e0',
+      '--muted-bg':'#ece0f8','--up-color':'#b05000','--dn-color':'#7000a0',
+    },
     anchors: [
       [7500, 243,84,28],[8000, 272,85,32],[8500, 290,80,35],
       [9000, 315,72,38],[9500, 337,58,50],[10000, 20,90,55],
@@ -549,6 +596,13 @@ const PALETTES = {
       '--fg-rule':'#2a1e14','--border-strong':'#1c1208','--border-soft':'#180e06',
       '--border-dim':'#140c04','--surface':'#0d0804','--surface-border':'#2a1a0c',
       '--muted-bg':'#0e0804','--up-color':'#e09040','--dn-color':'#501a08',
+    },
+    lightVars: {
+      '--bg':'#faf6f0','--accent':'#8a4a10','--fg-bright':'#2a1408',
+      '--fg-mid':'#705840','--fg-dim':'#7a6050','--fg-faint':'#9a8070',
+      '--fg-rule':'#e0d0c0','--border-strong':'#d8c8b8','--border-soft':'#e4d8c8',
+      '--border-dim':'#eeddd0','--surface':'#fffaf4','--surface-border':'#d8c8b0',
+      '--muted-bg':'#eee0d0','--up-color':'#8a5010','--dn-color':'#6a2008',
     },
     anchors: [
       [7500,  28,30,10],[8000,  28,40,15],[8500,  28,55,22],
@@ -577,6 +631,13 @@ const PALETTES = {
       '--border-dim':'#081018','--surface':'#060c18','--surface-border':'#142030',
       '--muted-bg':'#071018','--up-color':'#4db8ff','--dn-color':'#1a3080',
     },
+    lightVars: {
+      '--bg':'#f0f6fc','--accent':'#1a6090','--fg-bright':'#081828',
+      '--fg-mid':'#405870','--fg-dim':'#4a6878','--fg-faint':'#6a8898',
+      '--fg-rule':'#bcd4e8','--border-strong':'#c4d8e8','--border-soft':'#d0e4f0',
+      '--border-dim':'#deeef8','--surface':'#f4faff','--surface-border':'#c0d8ec',
+      '--muted-bg':'#dceef8','--up-color':'#1878b8','--dn-color':'#1020a0',
+    },
     anchors: [
       [7500, 220,60,18],[8000, 218,58,24],[8500, 215,60,30],
       [9000, 205,62,36],[9500, 192,64,42],[10000,180,62,48],
@@ -595,6 +656,7 @@ const PALETTES = {
 
 // Active anchor set (mutated when palette switches)
 let activeAnchors = PALETTES.spectral.anchors;
+let currentMode   = 'dark';
 
 // ── parse ──────────────────────────────────────────────────────────────────
 function parse(raw) {
@@ -765,11 +827,19 @@ function renderLegend(p) {
 function applyPalette(key) {
   const p    = PALETTES[key];
   const root = document.documentElement;
-  Object.entries(p.vars).forEach(([k, v]) => root.style.setProperty(k, v));
+  const vars = currentMode === 'dark' ? p.vars : p.lightVars;
+  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
   activeAnchors = p.anchors;
   document.getElementById('palette-desc').textContent = p.desc;
   renderMonths(dataMap);
   renderLegend(p);
+}
+
+function toggleMode() {
+  currentMode = currentMode === 'dark' ? 'light' : 'dark';
+  document.getElementById('mode-btn').textContent = currentMode === 'dark' ? 'light' : 'dark';
+  document.body.classList.toggle('light-mode', currentMode === 'light');
+  applyPalette(document.getElementById('palette-sel').value);
 }
 
 // ── year progress bar ───────────────────────────────────────────────────────
