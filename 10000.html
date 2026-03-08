@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10,000 steps · 2026</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      color: #7a7a7a;
+      font-family: monospace;
+      font-size: 13px;
+      padding: 48px 28px 64px;
+    }
+
+    .wrap {
+      max-width: 740px;
+      margin: 0 auto;
+    }
+
+    /* ── header ── */
+    h1 {
+      font-size: 24px;
+      font-weight: normal;
+      color: #FFD700;
+      letter-spacing: 3px;
+    }
+    .rule { color: #2e2e2e; }
+    .meta {
+      color: #2e2e2e;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      margin-top: 6px;
+    }
+    .meta em {
+      color: #484848;
+      font-style: normal;
+    }
+
+    /* ── stats ── */
+    .stats {
+      display: flex;
+      gap: 10px;
+      margin: 28px 0 36px;
+      flex-wrap: wrap;
+    }
+    .card {
+      border: 1px solid #1c1c1c;
+      padding: 13px 17px;
+      flex: 1;
+      min-width: 120px;
+    }
+    .card-val {
+      font-size: 19px;
+      color: #FFD700;
+      letter-spacing: 1px;
+    }
+    .card-lbl {
+      font-size: 9px;
+      color: #333;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    /* ── heatmap ── */
+    .months {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .month { flex-shrink: 0; }
+
+    .month-name {
+      color: #FFD700;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .dow-row {
+      display: grid;
+      grid-template-columns: repeat(7, 15px);
+      gap: 2px;
+      margin-bottom: 3px;
+    }
+    .dow-lbl {
+      font-size: 8px;
+      color: #272727;
+      text-align: center;
+      line-height: 15px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 15px);
+      gap: 2px;
+    }
+
+    .cell {
+      width: 15px;
+      height: 15px;
+      border-radius: 2px;
+    }
+    .cell.empty   { background: transparent !important; }
+    .cell.no-data { background: #131313; }
+    .cell.day {
+      cursor: pointer;
+      transition: transform 0.1s, filter 0.1s;
+    }
+    .cell.day:hover {
+      transform: scale(1.45);
+      filter: brightness(1.3);
+      z-index: 10;
+      position: relative;
+    }
+
+    .month-sub {
+      color: #282828;
+      font-size: 9px;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+    .month-sub em { color: #3d6b44; font-style: normal; }
+
+    /* ── tooltip ── */
+    #tip {
+      position: fixed;
+      background: #111;
+      border: 1px solid #252525;
+      padding: 9px 13px;
+      font-size: 11px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.08s;
+      z-index: 999;
+      white-space: nowrap;
+      line-height: 1.7;
+    }
+    #tip.show { opacity: 1; }
+    .tip-date  { color: #FFD700; font-size: 10px; letter-spacing: 1px; }
+    .tip-steps { color: #e0e0e0; font-size: 15px; }
+    .tip-delta { font-size: 10px; }
+    .tip-delta.up { color: #4a9e5c; }
+    .tip-delta.dn { color: #b03030; }
+
+    /* ── legend ── */
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .leg-label { color: #2a2a2a; font-size: 10px; letter-spacing: 1px; }
+    .leg-grad {
+      width: 100px;
+      height: 9px;
+      border-radius: 2px;
+      background: linear-gradient(to right,
+        hsl(0,  80%, 40%),
+        hsl(20, 80%, 48%),
+        hsl(48, 85%, 48%),
+        hsl(90, 65%, 37%),
+        hsl(135,70%, 29%)
+      );
+    }
+    .leg-items { display: flex; gap: 14px; }
+    .leg-item  { display: flex; align-items: center; gap: 5px; }
+    .leg-sq    { width: 9px; height: 9px; border-radius: 1px; flex-shrink: 0; }
+    .leg-t     { color: #333; font-size: 9px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>10,000 steps <span class="rule">·</span> 2026</h1>
+    <p class="meta">daily tracking // <em id="days-tracked"></em></p>
+  </header>
+
+  <div class="stats" id="stats"></div>
+  <div class="months" id="months"></div>
+
+  <div class="legend">
+    <span class="leg-label">steps →</span>
+    <div class="leg-grad"></div>
+    <div class="leg-items">
+      <div class="leg-item">
+        <div class="leg-sq" style="background:hsl(0,80%,40%)"></div>
+        <span class="leg-t">&lt; 8k</span>
+      </div>
+      <div class="leg-item">
+        <div class="leg-sq" style="background:hsl(25,80%,48%)"></div>
+        <span class="leg-t">8–9.5k</span>
+      </div>
+      <div class="leg-item">
+        <div class="leg-sq" style="background:hsl(48,85%,48%)"></div>
+        <span class="leg-t">9.5–10k</span>
+      </div>
+      <div class="leg-item">
+        <div class="leg-sq" style="background:hsl(90,65%,37%)"></div>
+        <span class="leg-t">10k ✓</span>
+      </div>
+      <div class="leg-item">
+        <div class="leg-sq" style="background:hsl(135,70%,29%)"></div>
+        <span class="leg-t">10.5k+</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="tip">
+  <div class="tip-date"  id="tip-d"></div>
+  <div class="tip-steps" id="tip-s"></div>
+  <div class="tip-delta" id="tip-g"></div>
+</div>
+
+<script>
+// ── embedded data (mirrors steps.csv) ──────────────────────────────────────
+const CSV = `date,steps
+2026-01-01,9876
+2026-01-02,10234
+2026-01-03,8765
+2026-01-04,9012
+2026-01-05,10456
+2026-01-06,8234
+2026-01-07,9678
+2026-01-08,10789
+2026-01-09,7890
+2026-01-10,10345
+2026-01-11,9456
+2026-01-12,8901
+2026-01-13,10567
+2026-01-14,9234
+2026-01-15,8543
+2026-01-16,10678
+2026-01-17,9876
+2026-01-18,10123
+2026-01-19,8765
+2026-01-20,9456
+2026-01-21,10234
+2026-01-22,7634
+2026-01-23,9678
+2026-01-24,10345
+2026-01-25,8765
+2026-01-26,10978
+2026-01-27,9012
+2026-01-28,8234
+2026-01-29,10456
+2026-01-30,9876
+2026-01-31,10123
+2026-02-01,8765
+2026-02-02,9456
+2026-02-03,10234
+2026-02-04,7523
+2026-02-05,10856
+2026-02-06,9345
+2026-02-07,8012
+2026-02-08,10567
+2026-02-09,9876
+2026-02-10,10234
+2026-02-11,8765
+2026-02-12,9678
+2026-02-13,10456
+2026-02-14,8901
+2026-02-15,10123
+2026-02-16,9456
+2026-02-17,7789
+2026-02-18,10789
+2026-02-19,9234
+2026-02-20,8543
+2026-02-21,10678
+2026-02-22,9876
+2026-02-23,10234
+2026-02-24,8765
+2026-02-25,9012
+2026-02-26,10456
+2026-02-27,9678
+2026-02-28,10934
+2026-03-01,8765
+2026-03-02,9456
+2026-03-03,10234
+2026-03-04,7890
+2026-03-05,10789
+2026-03-06,9345
+2026-03-07,8012
+2026-03-08,10567`;
+
+// ── parse ──────────────────────────────────────────────────────────────────
+function parse(raw) {
+  return raw.trim().split('\n').slice(1).map(line => {
+    const [date, steps] = line.split(',');
+    return { date: date.trim(), steps: parseInt(steps, 10) };
+  });
+}
+
+function buildMap(data) {
+  const m = {};
+  data.forEach(d => { m[d.date] = d.steps; });
+  return m;
+}
+
+// ── color ──────────────────────────────────────────────────────────────────
+// Anchors: [steps, hue, saturation, lightness]
+// Red (below 8k) → Orange → Amber → Yellow → Yellow-green (10k) → Deep green (10.5k+)
+const ANCHORS = [
+  [7500,   0,  80, 40],
+  [8000,   8,  80, 45],
+  [8500,  18,  80, 48],
+  [9000,  30,  82, 48],
+  [9500,  48,  85, 48],
+  [10000, 88,  65, 37],
+  [10500, 115, 65, 32],
+  [11000, 135, 70, 27],
+];
+
+function stepsToColor(s) {
+  if (s <= ANCHORS[0][0]) {
+    const [, h, sat, l] = ANCHORS[0];
+    return `hsl(${h},${sat}%,${l}%)`;
+  }
+  for (let i = 1; i < ANCHORS.length; i++) {
+    if (s <= ANCHORS[i][0]) {
+      const t   = (s - ANCHORS[i-1][0]) / (ANCHORS[i][0] - ANCHORS[i-1][0]);
+      const h   = ANCHORS[i-1][1] + t * (ANCHORS[i][1] - ANCHORS[i-1][1]);
+      const sat = ANCHORS[i-1][2] + t * (ANCHORS[i][2] - ANCHORS[i-1][2]);
+      const l   = ANCHORS[i-1][3] + t * (ANCHORS[i][3] - ANCHORS[i-1][3]);
+      return `hsl(${h.toFixed(1)},${sat.toFixed(1)}%,${l.toFixed(1)}%)`;
+    }
+  }
+  const [, h, sat, l] = ANCHORS[ANCHORS.length - 1];
+  return `hsl(${h},${sat}%,${l}%)`;
+}
+
+// ── formatting ─────────────────────────────────────────────────────────────
+function fmt(n) { return n.toLocaleString(); }
+
+function fmtDate(s) {
+  const [y, m, d] = s.split('-');
+  const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  return `${months[+m-1]} ${+d}, ${y}`;
+}
+
+// ── stats ──────────────────────────────────────────────────────────────────
+function calcStats(data) {
+  const total  = data.reduce((s, d) => s + d.steps, 0);
+  const avg    = Math.round(total / data.length);
+  const atGoal = data.filter(d => d.steps >= 10000).length;
+
+  // streak from last day backwards
+  let streak = 0;
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i].steps >= 10000) streak++;
+    else break;
+  }
+
+  // best single day
+  const best = data.reduce((a, b) => b.steps > a.steps ? b : a);
+
+  return { total, avg, atGoal, streak, best, days: data.length };
+}
+
+function renderStats(stats) {
+  const el = document.getElementById('stats');
+  const cards = [
+    { val: fmt(stats.total),                              lbl: 'total steps' },
+    { val: `${stats.atGoal} / ${stats.days}`,            lbl: 'days at goal' },
+    { val: fmt(stats.avg),                               lbl: 'daily average' },
+    { val: `${stats.streak} day${stats.streak !== 1 ? 's' : ''}`, lbl: 'current streak' },
+  ];
+  el.innerHTML = cards.map(c =>
+    `<div class="card">
+       <div class="card-val">${c.val}</div>
+       <div class="card-lbl">${c.lbl}</div>
+     </div>`
+  ).join('');
+}
+
+// ── heatmap ────────────────────────────────────────────────────────────────
+const MONTH_NAMES = [
+  'JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE',
+  'JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'
+];
+const DOW_LABELS = ['M','T','W','T','F','S','S'];
+
+function renderMonths(dataMap, data) {
+  const el = document.getElementById('months');
+
+  // Collect unique year-month combos from data
+  const seen = new Set();
+  data.forEach(d => seen.add(d.date.slice(0, 7)));
+  const monthKeys = [...seen].sort();
+
+  el.innerHTML = monthKeys.map(ym => {
+    const [year, month] = ym.split('-').map(Number);
+    const monthIdx = month - 1;
+    const mm = String(month).padStart(2, '0');
+
+    const firstDow    = (new Date(year, monthIdx, 1).getDay() + 6) % 7; // Mon = 0
+    const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+
+    // Month stats
+    let goalCount = 0, dataCount = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${year}-${mm}-${String(d).padStart(2, '0')}`;
+      if (dataMap[key] !== undefined) {
+        dataCount++;
+        if (dataMap[key] >= 10000) goalCount++;
+      }
+    }
+
+    // DOW header
+    const dowHdr = DOW_LABELS
+      .map(d => `<div class="dow-lbl">${d}</div>`)
+      .join('');
+
+    // Cells
+    let cells = '';
+    for (let i = 0; i < firstDow; i++) {
+      cells += `<div class="cell empty"></div>`;
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key   = `${year}-${mm}-${String(day).padStart(2, '0')}`;
+      const steps = dataMap[key];
+      if (steps !== undefined) {
+        const color = stepsToColor(steps);
+        cells += `<div class="cell day"
+          style="background:${color}"
+          data-date="${key}"
+          data-steps="${steps}"></div>`;
+      } else {
+        cells += `<div class="cell no-data"></div>`;
+      }
+    }
+
+    const goalFraction = dataCount > 0
+      ? `<em>${goalCount}</em>/${dataCount} at goal`
+      : '';
+
+    return `<div class="month">
+      <div class="month-name">${MONTH_NAMES[monthIdx]}</div>
+      <div class="dow-row">${dowHdr}</div>
+      <div class="grid">${cells}</div>
+      <div class="month-sub">${goalFraction}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── tooltip ────────────────────────────────────────────────────────────────
+function setupTooltip() {
+  const tip  = document.getElementById('tip');
+  const tipD = document.getElementById('tip-d');
+  const tipS = document.getElementById('tip-s');
+  const tipG = document.getElementById('tip-g');
+  const GOAL = 10000;
+
+  document.addEventListener('mousemove', e => {
+    const cell = e.target.closest('.cell.day');
+    if (!cell) { tip.className = ''; return; }
+
+    const steps = parseInt(cell.dataset.steps, 10);
+    const delta = steps - GOAL;
+
+    tipD.textContent = fmtDate(cell.dataset.date);
+    tipS.textContent = fmt(steps) + ' steps';
+
+    if (delta >= 0) {
+      tipG.textContent = '+' + fmt(delta) + ' above goal';
+      tipG.className   = 'tip-delta up';
+    } else {
+      tipG.textContent = fmt(Math.abs(delta)) + ' below goal';
+      tipG.className   = 'tip-delta dn';
+    }
+
+    tip.className = 'show';
+
+    // Position: keep inside viewport
+    const W = window.innerWidth, H = window.innerHeight;
+    const TW = 190, TH = 70;
+    let x = e.clientX + 18, y = e.clientY - 56;
+    if (x + TW > W) x = e.clientX - TW - 8;
+    if (y < 0)       y = e.clientY + 18;
+    if (y + TH > H)  y = H - TH - 8;
+
+    tip.style.left = x + 'px';
+    tip.style.top  = y + 'px';
+  });
+}
+
+// ── init ───────────────────────────────────────────────────────────────────
+const data    = parse(CSV);
+const dataMap = buildMap(data);
+const stats   = calcStats(data);
+
+document.getElementById('days-tracked').textContent =
+  `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
+
+renderStats(stats);
+renderMonths(dataMap, data);
+setupTooltip();
+</script>
+</body>
+</html>
