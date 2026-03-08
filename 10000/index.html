@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>10,000 steps · 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -62,7 +65,7 @@
     body {
       background: var(--bg);
       color: var(--fg-dim);
-      font-family: monospace;
+      font-family: 'IBM Plex Mono', monospace;
       font-size: 16px;
       padding: 65px 40px 90px;
       transition: background 0.4s ease, color 0.4s ease;
@@ -123,7 +126,7 @@
       background: transparent;
       border: 1px solid var(--border-strong);
       color: var(--accent);
-      font-family: monospace;
+      font-family: 'IBM Plex Mono', monospace;
       font-size: 11px;
       padding: 5px 10px;
       letter-spacing: 1px;
@@ -131,6 +134,10 @@
       outline: none;
       appearance: none;
       -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23FFD700'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
       transition: border-color 0.3s, color 0.3s;
     }
     #palette-sel option { background: var(--surface); color: var(--fg-bright); }
@@ -393,7 +400,7 @@
     /* ── mobile ── */
     @media (max-width: 640px) {
       :root {
-        --c:  calc((100vw - 71px) / 7);
+        --c:  calc((100vw - 71px) / 7); /* 71 = 2×16px body-padding + 18px wk-col + 3×3px gaps */
         --wc: 18px;
         --cg:  3px;
         --mg:  0px;
@@ -414,7 +421,7 @@
 <body>
 <div class="wrap">
 
-  <header>
+  <header class="header-row">
     <h1>10,000 steps <span class="rule">·</span> 2026</h1>
     <p class="meta">daily tracking // <em id="days-tracked"></em></p>
   </header>
@@ -444,7 +451,7 @@
         <option value="depth">Depth</option>
       </select>
       <span class="settings-item-lbl">mode</span>
-      <button id="mode-btn">☾</button>
+      <button id="mode-btn" aria-label="Switch to dark mode" title="Switch to dark mode">☾</button>
     </div>
   </div>
 
@@ -786,7 +793,7 @@ function renderStats(stats) {
 // ── heatmap ────────────────────────────────────────────────────────────────
 const MONTH_NAMES = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE',
                      'JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
-const DOW_LABELS  = ['M','T','W','T','F','S','S'];
+const DOW_LABELS  = ['M','T','W','Th','F','Sa','Su'];
 
 function renderMonths(dataMap) {
   const monthKeys = Array.from({ length: 12 }, (_, i) =>
@@ -829,7 +836,9 @@ function renderMonths(dataMap) {
           const steps = dataMap[key];
           if (steps !== undefined) {
             rowCells += `<div class="cell day" style="background:${stepsToColor(steps)}"
-              data-date="${key}" data-steps="${steps}"></div>`;
+              data-date="${key}" data-steps="${steps}"
+              role="button" tabindex="0"
+              aria-label="${fmtDate(key)}: ${fmt(steps)} steps"></div>`;
             rowTotal += steps; rowCount++;
           } else {
             rowCells += `<div class="cell no-data"></div>`;
@@ -899,15 +908,28 @@ function applyPalette(key) {
 
 function toggleMode() {
   currentMode = currentMode === 'dark' ? 'light' : 'dark';
-  document.getElementById('mode-btn').textContent = currentMode === 'dark' ? '☀' : '☾';
+  const btn   = document.getElementById('mode-btn');
+  const label = currentMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  btn.textContent    = currentMode === 'dark' ? '☀' : '☾';
+  btn.setAttribute('aria-label', label);
+  btn.setAttribute('title', label);
   document.body.classList.toggle('light-mode', currentMode === 'light');
   applyPalette(currentPalette);
 }
 
 // ── year progress bar ───────────────────────────────────────────────────────
 function renderProgress(days) {
-  const pct = (days / 365 * 100).toFixed(1);
-  setTimeout(() => { document.getElementById('progress-fill').style.width = pct + '%'; }, 80);
+  const now        = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const dayOfYear  = Math.ceil((now - startOfYear) / 86400000);
+  const todayPct   = (dayOfYear / 365 * 100).toFixed(1);
+  const dataPct    = (days / 365 * 100).toFixed(1);
+
+  const track = document.querySelector('.progress-track');
+  track.insertAdjacentHTML('beforeend',
+    `<div title="today" style="position:absolute;left:${todayPct}%;top:-3px;width:1px;height:8px;background:var(--fg-dim);opacity:0.45"></div>`
+  );
+  setTimeout(() => { document.getElementById('progress-fill').style.width = dataPct + '%'; }, 80);
 }
 
 // ── tooltip ─────────────────────────────────────────────────────────────────
