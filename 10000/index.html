@@ -167,27 +167,6 @@
 
     /* ── year progress bar ── */
     .progress-wrap { margin: 24px 0 36px; }
-    .progress-track {
-      height: 2px;
-      background: var(--border-soft);
-      position: relative;
-      overflow: visible;
-    }
-    .progress-fill {
-      height: 100%;
-      background: var(--accent);
-      position: relative;
-      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease;
-    }
-    .progress-fill::after {
-      content: '';
-      position: absolute;
-      right: -1px;
-      top: -4px;
-      width: 2px;
-      height: 10px;
-      background: var(--accent);
-    }
     .progress-labels {
       display: flex;
       justify-content: space-between;
@@ -198,6 +177,70 @@
       color: var(--fg-faint);
       letter-spacing: 1px;
     }
+
+    /* ── time slider ── */
+    .slider-label {
+      font-size: 10px;
+      color: var(--fg-faint);
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+      user-select: none;
+      transition: color 0.4s ease;
+    }
+    .time-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 2px;
+      background: transparent;
+      display: block;
+      cursor: ew-resize;
+      outline: none;
+      margin: 0;
+      padding: 6px 0;
+      box-sizing: content-box;
+    }
+    .time-slider::-webkit-slider-runnable-track {
+      height: 2px;
+      /* fill driven by --fill custom property set from JS */
+      background: linear-gradient(
+        to right,
+        var(--accent) 0%, var(--accent) var(--fill, 0%),
+        var(--border-soft) var(--fill, 0%), var(--border-soft) 100%
+      );
+      transition: background 0.4s ease;
+    }
+    .time-slider::-moz-range-track {
+      height: 2px;
+      background: var(--border-soft);
+      border: none;
+    }
+    .time-slider::-moz-range-progress {
+      height: 2px;
+      background: var(--accent);
+    }
+    .time-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      margin-top: -4px;  /* center on the 2px track: -(10-2)/2 */
+      border-radius: 50%;
+      cursor: ew-resize;
+      transition: background 0.4s ease, transform 0.12s ease;
+    }
+    .time-slider:hover::-webkit-slider-thumb,
+    .time-slider:focus::-webkit-slider-thumb { transform: scale(1.3); }
+    .time-slider::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+      cursor: ew-resize;
+      transition: background 0.4s ease, transform 0.12s ease;
+    }
+    .time-slider:hover::-moz-range-thumb,
+    .time-slider:focus::-moz-range-thumb { transform: scale(1.3); }
 
     /* ── stats ── */
     .stats {
@@ -443,9 +486,9 @@
   </header>
 
   <div class="progress-wrap">
-    <div class="progress-track">
-      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-    </div>
+    <div class="slider-label" id="slider-label"></div>
+    <input type="range" id="time-slider" min="1" step="1" class="time-slider"
+           aria-label="Scrub to date">
     <div class="progress-labels">
       <span>jan</span><span>apr</span><span>jul</span><span>oct</span><span>dec</span>
     </div>
@@ -782,6 +825,17 @@ function fmtDate(s) {
   return `${months[+m-1]} ${+d}, ${y}`;
 }
 
+// ── day-of-year helpers ─────────────────────────────────────────────────────
+function dayOfYearToISO(day, year) {
+  const d = new Date(year, 0, 1);
+  d.setDate(day);
+  return `${year}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function isoToDayOfYear(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return Math.ceil((new Date(y, m-1, d) - new Date(y, 0, 1)) / 86400000) + 1;
+}
+
 // ── ISO week number (ISO 8601: week starts Monday, week 1 contains Jan 4) ──
 function isoWeekNum(date) {
   const d = new Date(date.getTime());
@@ -919,6 +973,74 @@ function renderLegend(p) {
      </div>`;
 }
 
+// ── slider label ────────────────────────────────────────────────────────────
+function updateSliderLabel(cutoffISO) {
+  document.getElementById('slider-label').textContent =
+    `jan 01, 2026  →  ${fmtDate(cutoffISO)}`;
+}
+
+// ── in-place stat update (no DOM rebuild) ───────────────────────────────────
+function updateStats(stats) {
+  const vals = document.querySelectorAll('.card-val');
+  if (!vals.length) return;
+  vals[0].textContent = fmt(stats.total);
+  vals[1].textContent = `${stats.atGoal} / ${stats.days}`;
+  vals[2].textContent = fmt(stats.avg);
+  vals[3].textContent = `${stats.streak} day${stats.streak !== 1 ? 's' : ''}`;
+}
+
+// ── in-place cell color update (no DOM rebuild) ──────────────────────────────
+function updateCells(cutoffISO) {
+  document.querySelectorAll('.cell[data-date]').forEach(cell => {
+    if (cell.dataset.date <= cutoffISO) {
+      cell.style.background = stepsToColor(parseInt(cell.dataset.steps, 10));
+      if (cell.dataset.date === maxKey) cell.setAttribute('data-badge', '🔥');
+      else                              cell.removeAttribute('data-badge');
+    } else {
+      cell.style.background = 'var(--muted-bg)';
+      cell.removeAttribute('data-badge');
+    }
+  });
+}
+
+// ── in-place month sub-label update ─────────────────────────────────────────
+function updateMonthSubs(filteredMap) {
+  document.querySelectorAll('.month').forEach(monthEl => {
+    const nameEl = monthEl.querySelector('.month-name');
+    if (!nameEl) return;
+    const monthIdx = MONTH_NAMES.indexOf(nameEl.textContent);
+    if (monthIdx === -1) return;
+    const month = monthIdx + 1;
+    const mm    = String(month).padStart(2, '0');
+    const days  = new Date(2026, month, 0).getDate();
+    let goalCount = 0, dataCount = 0;
+    for (let d = 1; d <= days; d++) {
+      const key = `2026-${mm}-${String(d).padStart(2, '0')}`;
+      if (filteredMap[key] !== undefined) {
+        dataCount++;
+        if (filteredMap[key] >= GOAL) goalCount++;
+      }
+    }
+    const sub = monthEl.querySelector('.month-sub');
+    if (sub) sub.innerHTML = dataCount > 0 ? `<em>${goalCount}</em>/${dataCount} at goal` : '';
+  });
+}
+
+// ── render all (in-place updates, no DOM rebuild) ────────────────────────────
+function renderAll(cutoffISO) {
+  currentCutoff      = cutoffISO;
+  const filtered     = data.filter(d => d.date <= cutoffISO);
+  currentFilteredMap = buildMap(filtered);
+  ({ minKey, maxKey } = filtered.length ? findMinMax(filtered) : { minKey: null, maxKey: null });
+  updateStats(calcStats(filtered));
+  updateCells(cutoffISO);
+  updateMonthSubs(currentFilteredMap);
+  updateSliderLabel(cutoffISO);
+  document.getElementById('time-slider').style.setProperty(
+    '--fill', (isoToDayOfYear(cutoffISO) / 365 * 100).toFixed(1) + '%'
+  );
+}
+
 // ── palette switcher ────────────────────────────────────────────────────────
 function applyPalette(key) {
   const p    = PALETTES[key];
@@ -928,7 +1050,11 @@ function applyPalette(key) {
   activeAnchors  = p.anchors;
   currentPalette = key;
   document.getElementById('palette-sel').value = key;
-  renderMonths(dataMap);
+  renderMonths(dataMap);                              // full rebuild — palette change
+  if (currentCutoff) {
+    updateCells(currentCutoff);                       // re-apply filter
+    updateMonthSubs(currentFilteredMap);
+  }
   renderLegend(p);
 }
 
@@ -944,18 +1070,8 @@ function toggleMode() {
 }
 
 // ── year progress bar ───────────────────────────────────────────────────────
-function renderProgress(days) {
-  const now        = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const dayOfYear  = Math.ceil((now - startOfYear) / 86400000);
-  const todayPct   = (dayOfYear / 365 * 100).toFixed(1);
-  const dataPct    = (days / 365 * 100).toFixed(1);
-
-  const track = document.querySelector('.progress-track');
-  track.insertAdjacentHTML('beforeend',
-    `<div title="today" style="position:absolute;left:${todayPct}%;top:-3px;width:1px;height:8px;background:var(--fg-dim);opacity:0.45"></div>`
-  );
-  setTimeout(() => { document.getElementById('progress-fill').style.width = dataPct + '%'; }, 80);
+function renderProgress() {
+  // today marker removed — circle thumb is the single end-of-data marker
 }
 
 // ── tooltip ─────────────────────────────────────────────────────────────────
@@ -1037,17 +1153,40 @@ function setupTooltip() {
 // ── init ───────────────────────────────────────────────────────────────────
 const data    = parse(CSV);
 const dataMap = buildMap(data);
-const stats   = calcStats(data);
-const { minKey, maxKey } = findMinMax(data);
+let minKey, maxKey, currentCutoff, currentFilteredMap;
+
+// Seed module state from full dataset before any rendering
+const lastDataISO  = data[data.length - 1].date;
+const lastDataDay  = isoToDayOfYear(lastDataISO);
+currentCutoff      = lastDataISO;
+currentFilteredMap = dataMap;
+({ minKey, maxKey } = findMinMax(data));
 
 document.getElementById('days-tracked').textContent =
   `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
 document.body.classList.add('light-mode');
-renderProgress(data.length);
-renderStats(stats);
+renderProgress();
+renderStats(calcStats(data));  // build stat card DOM once
+
+// ── slider setup ────────────────────────────────────────────────────────────
+const slider = document.getElementById('time-slider');
+slider.max   = 365;            // full year span (aligns thumb with year labels)
+slider.value = lastDataDay;    // start at last recorded date
+
 applyPalette('spectral');
+setTimeout(() => {
+  slider.value = lastDataDay;  // override any browser-restored form value
+  renderAll(lastDataISO);
+}, 80);
+
 setupTooltip();
 
+slider.addEventListener('input', e => {
+  // Clamp to last day with data — slider cannot advance past it
+  const clamped = Math.min(+e.target.value, lastDataDay);
+  e.target.value = clamped;
+  renderAll(dayOfYearToISO(clamped, 2026));
+});
 document.getElementById('palette-sel').addEventListener('change', e => applyPalette(e.target.value));
 document.getElementById('mode-btn').addEventListener('click', toggleMode);
 document.getElementById('months').addEventListener('click', e => {
