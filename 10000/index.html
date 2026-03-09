@@ -187,6 +187,9 @@
       user-select: none;
       transition: color 0.4s ease;
     }
+    .slider-wrap {
+      position: relative;
+    }
     .time-slider {
       -webkit-appearance: none;
       width: 100%;
@@ -201,22 +204,41 @@
     }
     .time-slider::-webkit-slider-runnable-track {
       height: 2px;
-      /* fill driven by --fill custom property set from JS */
+      /* three zones: filled | data-available | no-data */
       background: linear-gradient(
         to right,
-        var(--accent) 0%, var(--accent) var(--fill, 0%),
-        var(--border-soft) var(--fill, 0%), var(--border-soft) 100%
+        var(--accent)      0%,               var(--accent)      var(--fill, 0%),
+        var(--fg-rule)     var(--fill, 0%),   var(--fg-rule)     var(--last-data, 100%),
+        var(--border-dim)  var(--last-data, 100%), var(--border-dim) 100%
       );
       transition: background 0.4s ease;
     }
     .time-slider::-moz-range-track {
       height: 2px;
-      background: var(--border-soft);
+      /* shows only the unfilled portion — progress covers the filled part */
+      background: linear-gradient(
+        to right,
+        var(--fg-rule)    0%,                var(--fg-rule)    var(--last-data, 100%),
+        var(--border-dim) var(--last-data, 100%), var(--border-dim) 100%
+      );
       border: none;
     }
     .time-slider::-moz-range-progress {
       height: 2px;
       background: var(--accent);
+    }
+    /* last-data tick marker */
+    .last-data-marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 2px;
+      height: 10px;
+      background: var(--accent);
+      opacity: 0.5;
+      pointer-events: none;
+      border-radius: 1px;
+      transition: background 0.4s ease;
     }
     .time-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -487,8 +509,11 @@
 
   <div class="progress-wrap">
     <div class="slider-label" id="slider-label"></div>
-    <input type="range" id="time-slider" min="1" step="1" class="time-slider"
-           aria-label="Scrub to date">
+    <div class="slider-wrap">
+      <input type="range" id="time-slider" min="1" step="1" class="time-slider"
+             aria-label="Scrub to date">
+      <div id="last-data-marker" class="last-data-marker"></div>
+    </div>
     <div class="progress-labels">
       <span>jan</span><span>apr</span><span>jul</span><span>oct</span><span>dec</span>
     </div>
@@ -979,6 +1004,17 @@ function updateSliderLabel(cutoffISO) {
     `jan 01, 2026  →  ${fmtDate(cutoffISO)}`;
 }
 
+// ── last-data marker positioning ─────────────────────────────────────────────
+function positionLastDataMarker() {
+  const slider = document.getElementById('time-slider');
+  const marker = document.getElementById('last-data-marker');
+  const thumbW = 10; // matches CSS thumb width
+  const w = slider.getBoundingClientRect().width;
+  if (!w) return;
+  const pct = lastDataDay / +slider.max;
+  marker.style.left = (thumbW / 2 + pct * (w - thumbW)).toFixed(1) + 'px';
+}
+
 // ── in-place stat update (no DOM rebuild) ───────────────────────────────────
 function updateStats(stats) {
   const vals = document.querySelectorAll('.card-val');
@@ -1036,9 +1072,9 @@ function renderAll(cutoffISO) {
   updateCells(cutoffISO);
   updateMonthSubs(currentFilteredMap);
   updateSliderLabel(cutoffISO);
-  document.getElementById('time-slider').style.setProperty(
-    '--fill', (isoToDayOfYear(cutoffISO) / 365 * 100).toFixed(1) + '%'
-  );
+  const sl = document.getElementById('time-slider');
+  sl.style.setProperty('--fill',      (isoToDayOfYear(cutoffISO) / 365 * 100).toFixed(1) + '%');
+  sl.style.setProperty('--last-data', (lastDataDay / 365 * 100).toFixed(1) + '%');
 }
 
 // ── palette switcher ────────────────────────────────────────────────────────
@@ -1173,11 +1209,17 @@ const slider = document.getElementById('time-slider');
 slider.max   = 365;            // full year span (aligns thumb with year labels)
 slider.value = lastDataDay;    // start at last recorded date
 
+// Annotate the last-data marker
+document.getElementById('last-data-marker').title = `last data: ${fmtDate(lastDataISO)}`;
+
 applyPalette('spectral');
 setTimeout(() => {
   slider.value = lastDataDay;  // override any browser-restored form value
   renderAll(lastDataISO);
+  requestAnimationFrame(positionLastDataMarker);
 }, 80);
+
+window.addEventListener('resize', positionLastDataMarker);
 
 setupTooltip();
 
