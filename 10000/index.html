@@ -20,19 +20,19 @@
       --mw: calc(var(--wc) + var(--cg) + 7 * var(--c) + 6 * var(--cg));  /* 216px per month grid */
 
       /* ── theme (overridden per-palette by JS) ── */
-      --bg:              #070707;
+      --bg:              #1a1a1a;
       --accent:          #FFD700;
       --fg-bright:       #e0e0e0;
       --fg-mid:          #707070;
       --fg-dim:          #585858;
-      --fg-faint:        #444444;
-      --fg-rule:         #333333;
-      --border-strong:   #161616;
-      --border-soft:     #141414;
-      --border-dim:      #111111;
-      --surface:         #0d0d0d;
-      --surface-border:  #1f1f1f;
-      --muted-bg:        #0f0f0f;
+      --fg-faint:        #4e4e4e;
+      --fg-rule:         #3d3d3d;
+      --border-strong:   #282828;
+      --border-soft:     #2e2e2e;
+      --border-dim:      #2a2a2a;
+      --surface:         #202020;
+      --surface-border:  #303030;
+      --muted-bg:        #222222;
       --up-color:        #3d8a4e;
       --dn-color:        #943030;
     }
@@ -664,11 +664,11 @@ const PALETTES = {
   // Most intuitive — red = bad, green = good. High contrast at goal boundary.
   spectral: {
     vars: {
-      '--bg':'#070707','--accent':'#FFD700','--fg-bright':'#e0e0e0',
-      '--fg-mid':'#707070','--fg-dim':'#585858','--fg-faint':'#444444',
-      '--fg-rule':'#333333','--border-strong':'#161616','--border-soft':'#141414',
-      '--border-dim':'#111111','--surface':'#0d0d0d','--surface-border':'#1f1f1f',
-      '--muted-bg':'#0f0f0f','--up-color':'#3d8a4e','--dn-color':'#943030',
+      '--bg':'#1a1a1a','--accent':'#FFD700','--fg-bright':'#e0e0e0',
+      '--fg-mid':'#707070','--fg-dim':'#585858','--fg-faint':'#4e4e4e',
+      '--fg-rule':'#3d3d3d','--border-strong':'#282828','--border-soft':'#2e2e2e',
+      '--border-dim':'#2a2a2a','--surface':'#202020','--surface-border':'#303030',
+      '--muted-bg':'#222222','--up-color':'#3d8a4e','--dn-color':'#943030',
     },
     lightVars: {
       '--bg':'#f9f8f2','--accent':'#7a5a00','--fg-bright':'#111111',
@@ -696,11 +696,11 @@ const PALETTES = {
   // Purple → blue → teal → green → yellow. Colorblind-safe.
   viridis: {
     vars: {
-      '--bg':'#050508','--accent':'#5ec8b0','--fg-bright':'#d8e8e4',
+      '--bg':'#191e1e','--accent':'#5ec8b0','--fg-bright':'#d8e8e4',
       '--fg-mid':'#607872','--fg-dim':'#4e5e5a','--fg-faint':'#3c4c48',
-      '--fg-rule':'#1a2a28','--border-strong':'#0d1c1a','--border-soft':'#0c1818',
-      '--border-dim':'#0b1414','--surface':'#070e0d','--surface-border':'#162422',
-      '--muted-bg':'#0a1210','--up-color':'#5ec8b0','--dn-color':'#6b3090',
+      '--fg-rule':'#2a3b39','--border-strong':'#1e2e2c','--border-soft':'#243330',
+      '--border-dim':'#222f2d','--surface':'#1a2120','--surface-border':'#263533',
+      '--muted-bg':'#1b2521','--up-color':'#5ec8b0','--dn-color':'#6b3090',
     },
     lightVars: {
       '--bg':'#f0f8f6','--accent':'#1e7060','--fg-bright':'#0a1e1c',
@@ -728,11 +728,11 @@ const PALETTES = {
   // Maximum visual punch. Used in scientific rendering where detail matters most.
   plasma: {
     vars: {
-      '--bg':'#08050a','--accent':'#e478fa','--fg-bright':'#eeddf5',
-      '--fg-mid':'#7a6882','--fg-dim':'#5a5062','--fg-faint':'#484050',
-      '--fg-rule':'#281830','--border-strong':'#1a0e20','--border-soft':'#160c1c',
-      '--border-dim':'#120a18','--surface':'#0d0810','--surface-border':'#2a1832',
-      '--muted-bg':'#0e0812','--up-color':'#e8a030','--dn-color':'#7c02a7',
+      '--bg':'#1c1820','--accent':'#e478fa','--fg-bright':'#eeddf5',
+      '--fg-mid':'#7a6882','--fg-dim':'#5a5062','--fg-faint':'#524860',
+      '--fg-rule':'#38283e','--border-strong':'#2a1e30','--border-soft':'#2f2435',
+      '--border-dim':'#2b2131','--surface':'#201c24','--surface-border':'#3a2840',
+      '--muted-bg':'#1f1923','--up-color':'#e8a030','--dn-color':'#7c02a7',
     },
     lightVars: {
       '--bg':'#f8f4fc','--accent':'#7a18b8','--fg-bright':'#1a0828',
@@ -760,11 +760,11 @@ const PALETTES = {
   // lightness and saturation. Coheres with a warm, ember-like identity.
   ember: {
     vars: {
-      '--bg':'#080502','--accent':'#cc7733','--fg-bright':'#e8d0b8',
-      '--fg-mid':'#756050','--fg-dim':'#584840','--fg-faint':'#443830',
-      '--fg-rule':'#2a1e14','--border-strong':'#1c1208','--border-soft':'#180e06',
-      '--border-dim':'#140c04','--surface':'#0d0804','--surface-border':'#2a1a0c',
-      '--muted-bg':'#0e0804','--up-color':'#e09040','--dn-color':'#501a08',
+      '--bg':'#1d1916','--accent':'#cc7733','--fg-bright':'#e8d0b8',
+      '--fg-mid':'#756050','--fg-dim':'#584840','--fg-faint':'#4e4038',
+      '--fg-rule':'#3a2e24','--border-strong':'#2e2218','--border-soft':'#33271f',
+      '--border-dim':'#2f251d','--surface':'#211d18','--surface-border':'#3c2c1e',
+      '--muted-bg':'#231f18','--up-color':'#e09040','--dn-color':'#501a08',
     },
     lightVars: {
       '--bg':'#faf6f0','--accent':'#8a4a10','--fg-bright':'#2a1408',
@@ -792,11 +792,11 @@ const PALETTES = {
   // is high. Elegant and unusual; familiar from oceanographic data maps.
   depth: {
     vars: {
-      '--bg':'#040810','--accent':'#4db8ff','--fg-bright':'#d0e8f8',
-      '--fg-mid':'#5a7080','--fg-dim':'#486070','--fg-faint':'#384858',
-      '--fg-rule':'#101c28','--border-strong':'#0a1828','--border-soft':'#091420',
-      '--border-dim':'#081018','--surface':'#060c18','--surface-border':'#142030',
-      '--muted-bg':'#071018','--up-color':'#4db8ff','--dn-color':'#1a3080',
+      '--bg':'#191f2a','--accent':'#4db8ff','--fg-bright':'#d0e8f8',
+      '--fg-mid':'#5a7080','--fg-dim':'#486070','--fg-faint':'#425568',
+      '--fg-rule':'#22303c','--border-strong':'#1e2c3c','--border-soft':'#25313e',
+      '--border-dim':'#23303c','--surface':'#1b2130','--surface-border':'#273545',
+      '--muted-bg':'#1a2430','--up-color':'#4db8ff','--dn-color':'#1a3080',
     },
     lightVars: {
       '--bg':'#f0f6fc','--accent':'#1a6090','--fg-bright':'#081828',
