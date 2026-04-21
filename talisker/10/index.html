@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talisker 10 · Label History</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:            #f9f8f2;
+      --accent:        #7a5a00;
+      --fg-bright:     #111111;
+      --fg-mid:        #555555;
+      --fg-dim:        #666666;
+      --fg-faint:      #888888;
+      --fg-rule:       #cccccc;
+      --border-strong: #d8d8d0;
+      --border-dim:    #eeeee8;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      opacity: 0.028;
+      z-index: 9997;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0, transparent 3px,
+        rgba(0,0,0,0.025) 3px, rgba(0,0,0,0.025) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+    body.dark-mode::after {
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0, transparent 3px,
+        rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px
+      );
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg-dim);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      padding: 65px 40px 90px;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    .wrap { max-width: 840px; margin: 0 auto; }
+
+    .header-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 35px;
+      font-weight: normal;
+      color: var(--accent);
+      letter-spacing: 4px;
+      line-height: 1;
+      transition: color 0.4s ease;
+    }
+
+    .rule { color: var(--fg-rule); transition: color 0.4s ease; }
+
+    #mode-btn {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--fg-faint);
+      font-size: 15px;
+      padding: 2px 8px;
+      line-height: 1;
+      cursor: pointer;
+      outline: none;
+      font-family: 'IBM Plex Mono', monospace;
+      transition: border-color 0.3s, color 0.3s;
+    }
+    #mode-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+    .meta {
+      color: var(--fg-dim);
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      transition: color 0.4s ease;
+    }
+    .meta em { color: var(--fg-mid); font-style: normal; transition: color 0.4s ease; }
+
+    .intro {
+      margin-top: 20px;
+      border-left: 2px solid var(--accent);
+      padding-left: 16px;
+      margin-left: 2px;
+      margin-bottom: 44px;
+      color: var(--fg-mid);
+      font-size: 11px;
+      letter-spacing: 1px;
+      line-height: 1.9;
+      transition: color 0.4s ease, border-color 0.4s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: inset 4px 0 0 var(--era-color); }
+      50%       { box-shadow: inset 4px 0 0 var(--era-color), 0 0 22px -4px var(--era-color); }
+    }
+
+    .era-card {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      border: 1px solid var(--border-strong);
+      margin-bottom: 20px;
+      position: relative;
+      opacity: 0;
+      animation: fadeUp 0.5s ease both;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .era-card:nth-child(1) { animation-delay: 0.05s; }
+    .era-card:nth-child(2) { animation-delay: 0.14s; }
+    .era-card:nth-child(3) { animation-delay: 0.22s; }
+    .era-card:nth-child(4) { animation-delay: 0.30s; }
+    .era-card:nth-child(5) { animation-delay: 0.38s; }
+    .era-card:nth-child(6) { animation-delay: 0.46s; }
+
+    .era-card:hover {
+      border-color: var(--era-color);
+      box-shadow: inset 4px 0 0 var(--era-color);
+    }
+    .era-card.era-current {
+      border-color: var(--era-color);
+      animation: fadeUp 0.5s ease 0.46s both, pulse-glow 2.4s ease-in-out 1.2s infinite;
+    }
+
+    .era-visual {
+      position: relative;
+      overflow: hidden;
+      min-height: 220px;
+      border-right: 1px solid var(--border-strong);
+      transition: border-color 0.3s ease;
+    }
+    .era-card:hover .era-visual { border-color: var(--era-color); }
+
+    .era-stamp {
+      position: absolute;
+      bottom: 10px; left: 14px;
+      font-size: 40px;
+      font-weight: 500;
+      color: var(--era-color);
+      opacity: 0.22;
+      letter-spacing: 3px;
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .era-card:hover .era-stamp { opacity: 0.55; }
+
+    .era-text {
+      padding: 22px 26px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .era-header {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .era-years {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--fg-faint);
+      text-transform: uppercase;
+      transition: color 0.4s ease;
+    }
+    .era-name {
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--fg-bright);
+      flex: 1;
+      transition: color 0.4s ease;
+    }
+    .era-badge {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--era-color);
+      border: 1px solid var(--era-color);
+      padding: 2px 7px;
+      background: color-mix(in srgb, var(--era-color) 8%, transparent);
+    }
+
+    .era-details {
+      list-style: none;
+      columns: 2;
+      column-gap: 24px;
+    }
+    .era-details li {
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--fg-dim);
+      line-height: 1.6;
+      padding-left: 14px;
+      padding-bottom: 6px;
+      break-inside: avoid;
+      position: relative;
+      transition: color 0.4s ease;
+    }
+    .era-details li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--fg-faint);
+    }
+
+    .era-abv {
+      margin-top: 16px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--fg-faint);
+      text-transform: uppercase;
+      transition: color 0.4s ease;
+    }
+    .era-rarity { color: var(--fg-faint); font-size: 10px; letter-spacing: 1.5px; }
+    .era-current-label { color: var(--era-color); }
+
+    .footnote {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-dim);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--fg-faint);
+      transition: color 0.4s ease, border-color 0.4s ease;
+    }
+    .footnote + .footnote {
+      margin-top: 8px;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    /* ── era visual panel backgrounds ── */
+    .era-visual[data-era="0"] { background: #0e0a04; }
+    .era-visual[data-era="1"] { background: #0c0a04; }
+    .era-visual[data-era="2"] { background: #0c1010; }
+    .era-visual[data-era="3"] { background: #080e1e; }
+    .era-visual[data-era="4"] { background: #060c16; }
+    .era-visual[data-era="5"] { background: #240e02; }
+
+    /* scenic backgrounds for eras without bottle photos */
+    .era-photo {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center;
+      pointer-events: none;
+    }
+    .era-photo-overlay { position: absolute; inset: 0; pointer-events: none; }
+    .era-visual[data-era="0"] .era-photo { object-position: center 40%; filter: brightness(0.72); }
+    .era-visual[data-era="0"] .era-photo-overlay { background: linear-gradient(160deg, rgba(20,8,0,0.22) 0%, rgba(10,4,0,0.38) 100%); }
+    .era-visual[data-era="1"] .era-photo { filter: brightness(0.82) sepia(0.15); }
+    .era-visual[data-era="1"] .era-photo-overlay { background: rgba(10,6,0,0.18); }
+
+    .no-label-notice {
+      position: absolute;
+      top: 12px; left: 0; right: 0;
+      text-align: center;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      pointer-events: none;
+    }
+
+    /* real bottle photos */
+    .bottle-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+      object-position: center;
+      padding: 10px;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 40px 16px 60px; }
+      h1 { font-size: 24px; letter-spacing: 2px; }
+      .era-card { grid-template-columns: 1fr; }
+      .era-visual {
+        min-height: 130px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-strong);
+      }
+      .era-card:hover .era-visual { border-color: var(--era-color); }
+      .era-text { padding: 16px; }
+      .era-details { columns: 1; }
+      .era-stamp { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="header-row">
+    <h1>talisker <span class="rule">·</span> 10</h1>
+    <button id="mode-btn" aria-label="Switch to dark mode" title="Switch to dark mode">☾</button>
+  </header>
+
+  <p class="meta">label eras <span class="rule">//</span> <em>1988–present</em></p>
+
+  <div class="intro">
+    Talisker has been distilled on the Isle of Skye since 1830 — the oldest operational distillery on the island.
+    The 10-year-old expression has appeared under six distinct label designs since its introduction as a founding
+    Classic Malt in 1988. Era dates are approximate, derived from collector bottle codes and auction records
+    rather than official Diageo documentation.
+  </div>
+
+  <!-- ── Era 0: Pre-Classic Malts ── -->
+  <div class="era-card" style="--era-color: #C8901A">
+    <div class="era-visual" data-era="0" aria-label="Talisker Distillery, Carbost — no label photo found">
+      <img class="era-photo" src="img/era0-distillery.jpg" alt="Talisker Distillery, Carbost, Isle of Skye"/>
+      <div class="era-photo-overlay"></div>
+      <div class="no-label-notice">no label photo found</div>
+      <div class="era-stamp">00</div>
+    </div>
+    <div class="era-text">
+      <div>
+        <div class="era-header">
+          <span class="era-years">~1982–1988</span>
+          <span class="era-name">Pre-Classic Malts</span>
+          <span class="era-badge">DCL / Ascot Malt Cellar</span>
+        </div>
+        <ul class="era-details">
+          <li>Talisker 8yo under DCL</li>
+          <li>"Golden Spirit of Skye" tagline</li>
+          <li>No "Classic Malts" badge</li>
+          <li>2-icon back label format</li>
+          <li>LLHA0000xxx bottle codes</li>
+          <li>1-litre bottles available</li>
+        </ul>
+      </div>
+      <div class="era-abv">45.8% abv <span class="era-rarity">· extremely rare</span></div>
+    </div>
+  </div>
+
+  <!-- ── Era 1: Classic Malts Map Label ── -->
+  <div class="era-card" style="--era-color: #B8820E">
+    <div class="era-visual" data-era="1" aria-label="Admiralty Chart of Isle of Skye, 1878 — no label photo found">
+      <img class="era-photo" src="img/era1-chart.jpg" alt="Admiralty Chart of Isle of Skye, 1878"/>
+      <div class="era-photo-overlay"></div>
+      <div class="no-label-notice">no label photo found</div>
+      <div class="era-stamp">01</div>
+    </div>
+    <div class="era-text">
+      <div>
+        <div class="era-header">
+          <span class="era-years">1988–~2000</span>
+          <span class="era-name">Classic Malts Map Label</span>
+          <span class="era-badge">Founding Classic Malt</span>
+        </div>
+        <ul class="era-details">
+          <li>Cartographic Isle of Skye map on front</li>
+          <li>"Classic Malts of Scotland" badge</li>
+          <li>"Golden Spirit of Skye" tagline</li>
+          <li>Brown bottle glass; presentation box</li>
+          <li>3-icon back label (vs. 2-icon pre-launch)</li>
+          <li>Two sub-versions: early vs. late 1990s</li>
+        </ul>
+      </div>
+      <div class="era-abv">45.8% abv <span class="era-rarity">· most sought-after</span></div>
+    </div>
+  </div>
+
+  <!-- ── Era 2: Standing Stone ── -->
+  <div class="era-card" style="--era-color: #7a8a8a">
+    <div class="era-visual" data-era="2" aria-label="Talisker 10 grey label bottle, c. 2001–2005">
+      <img class="bottle-img" src="img/era2-bottle.jpg" alt="Talisker 10 grey label bottle, c. 2001–2005"/>
+      <div class="era-stamp">02</div>
+    </div>
+    <div class="era-text">
+      <div>
+        <div class="era-header">
+          <span class="era-years">~2001–~2005</span>
+          <span class="era-name">Standing Stone</span>
+          <span class="era-badge">Grey Label · Grey Box</span>
+        </div>
+        <ul class="era-details">
+          <li>Grey label and grey box</li>
+          <li>Isle of Skye standing stones motif</li>
+          <li>"10 Years — The Classic Malts"</li>
+          <li>L15R / L15T bottle code prefix</li>
+          <li>Transitional era; limited documentation</li>
+          <li>Rare in collector circulation</li>
+        </ul>
+      </div>
+      <div class="era-abv">45.8% abv <span class="era-rarity">· rare</span></div>
+    </div>
+  </div>
+
+  <!-- ── Era 3: Blue/Cream v1 ── -->
+  <div class="era-card" style="--era-color: #4a6fa5">
+    <div class="era-visual" data-era="3" aria-label="Talisker 10 blue/cream label bottle, c. 2006">
+      <img class="bottle-img" src="img/era3-bottle.jpg" alt="Talisker 10 blue/cream label bottle, c. 2006"/>
+      <div class="era-stamp">03</div>
+    </div>
+    <div class="era-text">
+      <div>
+        <div class="era-header">
+          <span class="era-years">~2005–~2012</span>
+          <span class="era-name">Blue / Cream · First Edition</span>
+          <span class="era-badge">CM000 Codes · Plain Blue Box</span>
+        </div>
+        <ul class="era-details">
+          <li>Blue and cream color scheme</li>
+          <li>Plain blue presentation box</li>
+          <li>Centered "10" numeral on label</li>
+          <li>"Only distillery on Skye" introduced</li>
+          <li>LxxxxCM000 bottle code format</li>
+          <li>L5245CM000 (Sep 2005) — L2107CM000 (Apr 2012)</li>
+        </ul>
+      </div>
+      <div class="era-abv">45.8% abv</div>
+    </div>
+  </div>
+
+  <!-- ── Era 4: Blue/Cream v2 / Made by the Sea ── -->
+  <div class="era-card" style="--era-color: #2563a0">
+    <div class="era-visual" data-era="4" aria-label="Talisker 10 blue/cream v2 bottle, c. 2012–2021">
+      <img class="bottle-img" src="img/era4-bottle.jpg" alt="Talisker 10 blue/cream Made by the Sea label bottle, c. 2012–2021"/>
+      <div class="era-stamp">04</div>
+    </div>
+    <div class="era-text">
+      <div>
+        <div class="era-header">
+          <span class="era-years">~2012–2021</span>
+          <span class="era-name">Blue / Cream · Made by the Sea</span>
+          <span class="era-badge">Waves Artwork Box</span>
+        </div>
+        <ul class="era-details">
+          <li>Rocky coastline / waves artwork on box</li>
+          <li>Artist's signature inside box lid</li>
+          <li>"10" numeral shifted to label right</li>
+          <li>Isle of Skye drawing on label left</li>
+          <li>"Made by the Sea" campaign (launched 2017)</li>
+          <li>L3092CM000 (2013) — L5224CM000 (2015)</li>
+        </ul>
+      </div>
+      <div class="era-abv">45.8% abv</div>
+    </div>
+  </div>
+
+  <!-- ── Era 5: Orange / Sustainable ── -->
+  <div class="era-card era-current" style="--era-color: #D4701F">
+    <div class="era-visual" data-era="5" aria-label="Talisker 10 orange sustainable label with gift box, 2022">
+      <img class="bottle-img" src="img/era5-bottle.jpg" alt="Talisker 10 orange sustainable label with gift box, 2022 edition"/>
+      <div class="era-stamp">05</div>
+    </div>
+    <div class="era-text">
+      <div>
+        <div class="era-header">
+          <span class="era-years">2021–present</span>
+          <span class="era-name">Orange / Sustainable</span>
+          <span class="era-badge">Current Label</span>
+        </div>
+        <ul class="era-details">
+          <li>Orange trim replaces blue</li>
+          <li>Die-cut label traces the Skye coastline</li>
+          <li>Wooden stopper replaces plastic</li>
+          <li>"Oldest distillery on the Isle of Skye"</li>
+          <li>86% reduction in plastic components</li>
+          <li>Torabhaig Distillery opened on Skye (2021)</li>
+        </ul>
+      </div>
+      <div class="era-abv">45.8% abv <span class="era-rarity era-current-label">· current release</span></div>
+    </div>
+  </div>
+
+  <div class="footnote">// sources: whiskybase · caledonian collectables · master of malt · diving for pearls</div>
+  <div class="footnote">// images: era 0 · Talisker Distillery © Repsol (CC BY-SA 2.0) · era 1 · Admiralty Chart No. 2551, 1878 (public domain) · era 2 · bottle © Benutzer:Urs (CC BY-SA 3.0) · era 3 · bottle © Benutzer:Urs (CC BY-SA 3.0) · era 4 · bottle © Keeezawa (CC BY-SA 4.0) · era 5 · bottle © Datenralfi (CC BY-SA 4.0) · all via Wikimedia Commons</div>
+
+</div>
+
+<script>
+const DARK_VARS = {
+  '--bg':            '#1a1a1a',
+  '--accent':        '#FFD700',
+  '--fg-bright':     '#e0e0e0',
+  '--fg-mid':        '#707070',
+  '--fg-dim':        '#585858',
+  '--fg-faint':      '#4e4e4e',
+  '--fg-rule':       '#3d3d3d',
+  '--border-strong': '#282828',
+  '--border-dim':    '#2a2a2a',
+};
+const LIGHT_VARS = {
+  '--bg':            '#f9f8f2',
+  '--accent':        '#7a5a00',
+  '--fg-bright':     '#111111',
+  '--fg-mid':        '#555555',
+  '--fg-dim':        '#666666',
+  '--fg-faint':      '#888888',
+  '--fg-rule':       '#cccccc',
+  '--border-strong': '#d8d8d0',
+  '--border-dim':    '#eeeee8',
+};
+
+let currentMode = 'light';
+
+function applyVars(vars) {
+  const root = document.documentElement;
+  Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+}
+
+function toggleMode() {
+  currentMode = currentMode === 'light' ? 'dark' : 'light';
+  const btn = document.getElementById('mode-btn');
+  const isDark = currentMode === 'dark';
+  btn.textContent = isDark ? '☀' : '☾';
+  const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+  btn.setAttribute('aria-label', label);
+  btn.setAttribute('title', label);
+  document.body.classList.toggle('dark-mode', isDark);
+  applyVars(isDark ? DARK_VARS : LIGHT_VARS);
+}
+
+document.getElementById('mode-btn').addEventListener('click', toggleMode);
+</script>
+</body>
+</html>
