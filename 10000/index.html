@@ -268,7 +268,7 @@
     .stats {
       display: flex;
       gap: 10px;
-      margin-bottom: 48px;
+      margin-bottom: 14px;
       flex-wrap: wrap;
     }
     .card {
@@ -283,7 +283,6 @@
     .card:nth-child(1) { animation-delay: 0.05s; }
     .card:nth-child(2) { animation-delay: 0.12s; }
     .card:nth-child(3) { animation-delay: 0.19s; }
-    .card:nth-child(4) { animation-delay: 0.26s; }
 
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(5px); }
@@ -304,6 +303,18 @@
       margin-top: 8px;
       transition: color 0.4s ease;
     }
+    /* ── records line ── */
+    .records {
+      font-size: 11px;
+      color: var(--fg-dim);
+      letter-spacing: 1.2px;
+      margin-bottom: 42px;
+      opacity: 0;
+      animation: fadeUp 0.5s 0.32s ease both;
+      transition: color 0.4s ease;
+    }
+    .records em { color: var(--accent); font-style: normal; transition: color 0.4s ease; }
+    .records .rec-sep { color: var(--fg-faint); margin: 0 10px; }
 
     /* ── heatmap ── */
     .months {
@@ -520,6 +531,7 @@
   </div>
 
   <div class="stats" id="stats"></div>
+  <div class="records" id="records"></div>
   <div class="months" id="months"></div>
   <div class="legend" id="legend"></div>
 
@@ -876,6 +888,20 @@ function findMinMax(data) {
   return { minKey: minEntry.date, maxKey: maxEntry.date };
 }
 
+function findBestWeek(data) {
+  const totals = {};
+  data.forEach(d => {
+    const [y, m, day] = d.date.split('-').map(Number);
+    const wn = isoWeekNum(new Date(y, m - 1, day));
+    totals[wn] = (totals[wn] || 0) + d.steps;
+  });
+  let bestWk = null, bestTotal = 0;
+  Object.entries(totals).forEach(([wk, t]) => {
+    if (t > bestTotal) { bestTotal = t; bestWk = +wk; }
+  });
+  return { weekNum: bestWk, total: bestTotal };
+}
+
 // ── color ──────────────────────────────────────────────────────────────────
 function interpolateHSL(s) {
   const A = activeAnchors;
@@ -937,18 +963,29 @@ function calcStats(data) {
     if (data[i].steps >= 10000) streak++;
     else break;
   }
-  return { total, avg, atGoal, streak, days: data.length };
+  const { maxKey: bestDayDate } = data.length ? findMinMax(data) : { maxKey: null };
+  const bestDayEntry = bestDayDate ? data.find(d => d.date === bestDayDate) : null;
+  const bestDaySteps = bestDayEntry ? bestDayEntry.steps : 0;
+  const { weekNum: bestWeekNum, total: bestWeekTotal } = findBestWeek(data);
+  return { total, avg, atGoal, streak, days: data.length, bestDayDate, bestDaySteps, bestWeekNum, bestWeekTotal };
 }
 
 function renderStats(stats) {
   document.getElementById('stats').innerHTML = [
-    { val: fmt(stats.total),                                        lbl: 'total steps' },
-    { val: `${stats.atGoal} / ${stats.days}`,                      lbl: 'days at goal' },
-    { val: fmt(stats.avg),                                         lbl: 'daily average' },
-    { val: `${stats.streak} day${stats.streak !== 1 ? 's' : ''}`, lbl: 'current streak' },
+    { val: fmt(stats.total),             lbl: 'total steps' },
+    { val: `${stats.atGoal} / ${stats.days}`, lbl: 'days at goal' },
+    { val: fmt(stats.avg),               lbl: 'daily average' },
   ].map(c =>
     `<div class="card"><div class="card-val">${c.val}</div><div class="card-lbl">${c.lbl}</div></div>`
   ).join('');
+}
+
+function renderRecords(stats) {
+  const wkStr = stats.bestWeekNum !== null ? `wk ${String(stats.bestWeekNum).padStart(2, '0')}` : '—';
+  document.getElementById('records').innerHTML =
+    `best day <em id="rec-day-date">${fmtDate(stats.bestDayDate || '')}</em> · <em id="rec-day-steps">${fmt(stats.bestDaySteps)}</em> steps` +
+    `<span class="rec-sep">//</span>` +
+    `best week <em id="rec-week-wk">${wkStr}</em> · <em id="rec-week-steps">${fmt(stats.bestWeekTotal)}</em> steps`;
 }
 
 // ── heatmap ────────────────────────────────────────────────────────────────
@@ -996,9 +1033,8 @@ function renderMonths(dataMap) {
           const key   = `${year}-${mm}-${String(dayInMonth).padStart(2, '0')}`;
           const steps = dataMap[key];
           if (steps !== undefined) {
-            const badge = key === maxKey ? ' data-badge="🔥"' : '';
-            rowCells += `<div class="cell day" style="background:${stepsToColor(steps)}"
-              data-date="${key}" data-steps="${steps}"${badge}
+              rowCells += `<div class="cell day" style="background:${stepsToColor(steps)}"
+              data-date="${key}" data-steps="${steps}"
               role="button" tabindex="0"
               aria-label="${fmtDate(key)}: ${fmt(steps)} steps"></div>`;
             rowTotal += steps; rowCount++;
@@ -1079,7 +1115,11 @@ function updateStats(stats) {
   vals[0].textContent = fmt(stats.total);
   vals[1].textContent = `${stats.atGoal} / ${stats.days}`;
   vals[2].textContent = fmt(stats.avg);
-  vals[3].textContent = `${stats.streak} day${stats.streak !== 1 ? 's' : ''}`;
+  const wkStr = stats.bestWeekNum !== null ? `wk ${String(stats.bestWeekNum).padStart(2, '0')}` : '—';
+  document.getElementById('rec-day-date').textContent  = fmtDate(stats.bestDayDate || '');
+  document.getElementById('rec-day-steps').textContent = fmt(stats.bestDaySteps);
+  document.getElementById('rec-week-wk').textContent   = wkStr;
+  document.getElementById('rec-week-steps').textContent = fmt(stats.bestWeekTotal);
 }
 
 // ── in-place cell color update (no DOM rebuild) ──────────────────────────────
@@ -1087,11 +1127,8 @@ function updateCells(cutoffISO) {
   document.querySelectorAll('.cell[data-date]').forEach(cell => {
     if (cell.dataset.date <= cutoffISO) {
       cell.style.background = stepsToColor(parseInt(cell.dataset.steps, 10));
-      if (cell.dataset.date === maxKey) cell.setAttribute('data-badge', '🔥');
-      else                              cell.removeAttribute('data-badge');
     } else {
       cell.style.background = 'var(--muted-bg)';
-      cell.removeAttribute('data-badge');
     }
   });
 }
@@ -1182,11 +1219,6 @@ function setupTooltip() {
       tipS.textContent = fmt(steps) + ' steps';
       tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
       tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
-      const special = el.dataset.date === maxKey ? '🔥 personal best!' : '';
-      let sp = document.getElementById('tip-sp');
-      if (!sp) { sp = document.createElement('div'); sp.id = 'tip-sp'; tip.appendChild(sp); }
-      sp.className   = 'tip-special';
-      sp.textContent = special;
     } else {
       const wn    = el.dataset.week;
       const avg   = parseInt(el.dataset.avg, 10);
@@ -1195,8 +1227,6 @@ function setupTooltip() {
       tipS.textContent = fmt(avg) + ' avg steps';
       tipG.textContent = delta >= 0 ? '+' + fmt(delta) + ' above goal' : fmt(Math.abs(delta)) + ' below goal';
       tipG.className   = 'tip-delta ' + (delta >= 0 ? 'up' : 'dn');
-      const sp = document.getElementById('tip-sp');
-      if (sp) sp.textContent = '';
     }
   }
 
@@ -1259,7 +1289,9 @@ document.getElementById('days-tracked').textContent =
   `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
 document.body.classList.add('light-mode');
 renderProgress();
-renderStats(calcStats(data));  // build stat card DOM once
+const initialStats = calcStats(data);
+renderStats(initialStats);   // build stat card DOM once
+renderRecords(initialStats); // build records line DOM once
 
 // ── slider setup ────────────────────────────────────────────────────────────
 const slider = document.getElementById('time-slider');
