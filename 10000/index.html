@@ -895,17 +895,30 @@ function findMinMax(data) {
 }
 
 function findBestWeek(data) {
-  const totals = {};
+  if (!data.length) return { startDate: null, endDate: null, total: 0 };
+  const map = {};
+  data.forEach(d => { map[d.date] = d.steps; });
+  const firstDate = data[0].date;
+  let bestTotal = 0, bestStart = null, bestEnd = null;
   data.forEach(d => {
-    const [y, m, day] = d.date.split('-').map(Number);
-    const wn = isoWeekNum(new Date(y, m - 1, day));
-    totals[wn] = (totals[wn] || 0) + d.steps;
+    const end = new Date(d.date + 'T00:00:00');
+    let total = 0;
+    for (let i = 0; i < 7; i++) {
+      const t = new Date(end);
+      t.setDate(end.getDate() - i);
+      const iso = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+      if (map[iso] !== undefined) total += map[iso];
+    }
+    if (total > bestTotal) {
+      bestTotal = total;
+      bestEnd = d.date;
+      const start = new Date(end);
+      start.setDate(end.getDate() - 6);
+      const candidate = `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+      bestStart = candidate < firstDate ? firstDate : candidate;
+    }
   });
-  let bestWk = null, bestTotal = 0;
-  Object.entries(totals).forEach(([wk, t]) => {
-    if (t > bestTotal) { bestTotal = t; bestWk = +wk; }
-  });
-  return { weekNum: bestWk, total: bestTotal };
+  return { startDate: bestStart, endDate: bestEnd, total: bestTotal };
 }
 
 // ── color ──────────────────────────────────────────────────────────────────
@@ -937,6 +950,12 @@ function fmtDate(s) {
   const [y, m, d] = s.split('-');
   const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
   return `${months[+m-1]} ${+d}, ${y}`;
+}
+
+function fmtDateShort(s) {
+  const [, m, d] = s.split('-');
+  const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  return `${months[+m-1]} ${+d}`;
 }
 
 // ── day-of-year helpers ─────────────────────────────────────────────────────
@@ -972,8 +991,8 @@ function calcStats(data) {
   const { maxKey: bestDayDate } = data.length ? findMinMax(data) : { maxKey: null };
   const bestDayEntry = bestDayDate ? data.find(d => d.date === bestDayDate) : null;
   const bestDaySteps = bestDayEntry ? bestDayEntry.steps : 0;
-  const { weekNum: bestWeekNum, total: bestWeekTotal } = findBestWeek(data);
-  return { total, avg, atGoal, streak, days: data.length, bestDayDate, bestDaySteps, bestWeekNum, bestWeekTotal };
+  const { startDate: bestWeekStart, endDate: bestWeekEnd, total: bestWeekTotal } = findBestWeek(data);
+  return { total, avg, atGoal, streak, days: data.length, bestDayDate, bestDaySteps, bestWeekStart, bestWeekEnd, bestWeekTotal };
 }
 
 function renderStats(stats) {
@@ -987,11 +1006,13 @@ function renderStats(stats) {
 }
 
 function renderRecords(stats) {
-  const wkStr = stats.bestWeekNum !== null ? `wk ${String(stats.bestWeekNum).padStart(2, '0')}` : '—';
+  const rangeStr = stats.bestWeekStart && stats.bestWeekEnd
+    ? `${fmtDateShort(stats.bestWeekStart)} – ${fmtDateShort(stats.bestWeekEnd)}`
+    : '—';
   document.getElementById('records').innerHTML =
     `best day <em id="rec-day-date">${fmtDate(stats.bestDayDate || '')}</em> · <em id="rec-day-steps">${fmt(stats.bestDaySteps)}</em> steps` +
     `<span class="rec-sep">//</span>` +
-    `best week <em id="rec-week-wk">${wkStr}</em> · <em id="rec-week-steps">${fmt(stats.bestWeekTotal)}</em> steps`;
+    `best week <em id="rec-week-range">${rangeStr}</em> · <em id="rec-week-steps">${fmt(stats.bestWeekTotal)}</em> steps`;
 }
 
 // ── heatmap ────────────────────────────────────────────────────────────────
@@ -1121,10 +1142,12 @@ function updateStats(stats) {
   vals[0].textContent = fmt(stats.total);
   vals[1].textContent = `${stats.atGoal} / ${stats.days}`;
   vals[2].textContent = fmt(stats.avg);
-  const wkStr = stats.bestWeekNum !== null ? `wk ${String(stats.bestWeekNum).padStart(2, '0')}` : '—';
-  document.getElementById('rec-day-date').textContent  = fmtDate(stats.bestDayDate || '');
-  document.getElementById('rec-day-steps').textContent = fmt(stats.bestDaySteps);
-  document.getElementById('rec-week-wk').textContent   = wkStr;
+  const rangeStr = stats.bestWeekStart && stats.bestWeekEnd
+    ? `${fmtDateShort(stats.bestWeekStart)} – ${fmtDateShort(stats.bestWeekEnd)}`
+    : '—';
+  document.getElementById('rec-day-date').textContent   = fmtDate(stats.bestDayDate || '');
+  document.getElementById('rec-day-steps').textContent  = fmt(stats.bestDaySteps);
+  document.getElementById('rec-week-range').textContent = rangeStr;
   document.getElementById('rec-week-steps').textContent = fmt(stats.bestWeekTotal);
 }
 
