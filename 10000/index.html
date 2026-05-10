@@ -121,28 +121,6 @@
       transition: color 0.4s ease;
     }
 
-    /* ── palette selector ── */
-    #palette-sel {
-      background: transparent;
-      border: 1px solid var(--border-strong);
-      color: var(--accent);
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 11px;
-      padding: 5px 10px;
-      letter-spacing: 1px;
-      cursor: pointer;
-      outline: none;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23FFD700'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 28px;
-      transition: border-color 0.3s, color 0.3s;
-    }
-    #palette-sel option { background: var(--surface); color: var(--fg-bright); }
-    #palette-sel:hover { border-color: var(--accent); }
-
     #mode-btn {
       background: transparent;
       border: 1px solid var(--border-strong);
@@ -399,22 +377,6 @@
       position: relative;
     }
 
-    /* ── min/max badges ── */
-    .cell[data-badge] { position: relative; background: transparent !important; }
-    .cell[data-badge]::after {
-      content: attr(data-badge);
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: calc(var(--c) * 0.72);
-      line-height: 1;
-      pointer-events: none;
-      z-index: 6;
-    }
-    .tip-special { font-size: 11px; color: var(--fg-mid); letter-spacing: 1px; margin-top: 2px; }
-
     .month-sub {
       color: var(--fg-dim);
       font-size: 10px;
@@ -538,14 +500,6 @@
   <div class="settings">
     <div class="settings-lbl">// settings</div>
     <div class="settings-row">
-      <span class="settings-item-lbl">palette</span>
-      <select id="palette-sel">
-        <option value="spectral">Spectral</option>
-        <option value="viridis">Viridis</option>
-        <option value="plasma">Plasma</option>
-        <option value="ember">Ember</option>
-        <option value="depth">Depth</option>
-      </select>
       <span class="settings-item-lbl">mode</span>
       <button id="mode-btn" aria-label="Switch to dark mode" title="Switch to dark mode">☾</button>
     </div>
@@ -693,183 +647,40 @@ const CSV = `date,steps
 2026-05-09,540
 `;
 
-// ── palettes ───────────────────────────────────────────────────────────────
-// Each palette defines:
-//   label:    display name
-//   desc:     design-theory rationale
-//   vars:     CSS custom properties to override on :root
-//   anchors:  [steps, hue, sat%, lightness%] interpolation points
-//   gradient: CSS gradient string for the legend bar
-//   swatches: [{c: color, l: label}] for legend items
-const PALETTES = {
-
-  // Traffic-light semantics: warm below goal, cool above.
-  // Most intuitive — red = bad, green = good. High contrast at goal boundary.
-  spectral: {
-    vars: {
-      '--bg':'#1a1a1a','--accent':'#FFD700','--fg-bright':'#e0e0e0',
-      '--fg-mid':'#707070','--fg-dim':'#585858','--fg-faint':'#4e4e4e',
-      '--fg-rule':'#3d3d3d','--border-strong':'#282828','--border-soft':'#2e2e2e',
-      '--border-dim':'#2a2a2a','--surface':'#202020','--surface-border':'#303030',
-      '--muted-bg':'#222222','--up-color':'#3d8a4e','--dn-color':'#943030',
-    },
-    lightVars: {
-      '--bg':'#f9f8f2','--accent':'#7a5a00','--fg-bright':'#111111',
-      '--fg-mid':'#555555','--fg-dim':'#666666','--fg-faint':'#888888',
-      '--fg-rule':'#cccccc','--border-strong':'#d8d8d0','--border-soft':'#e4e4dc',
-      '--border-dim':'#eeeee8','--surface':'#ffffff','--surface-border':'#ddddd8',
-      '--muted-bg':'#e8e8e2','--up-color':'#2a6e38','--dn-color':'#8b2020',
-    },
-    anchors: [
-      [7500,   0, 80, 40],[8000,   8, 80, 45],[8500,  18, 80, 48],
-      [9000,  30, 82, 48],[9500,  48, 85, 48],[10000, 88, 65, 37],
-      [10500,115, 65, 32],[11000,135, 70, 27],
-    ],
-    gradient: 'linear-gradient(to right,hsl(0,80%,40%),hsl(20,80%,48%),hsl(48,85%,48%),hsl(90,65%,37%),hsl(135,70%,29%))',
-    swatches: [
-      {c:'hsl(0,80%,40%)',   l:'< 8k'},
-      {c:'hsl(25,80%,48%)',  l:'8–9.5k'},
-      {c:'hsl(48,85%,48%)',  l:'9.5–10k'},
-      {c:'hsl(90,65%,37%)',  l:'10k ✓'},
-      {c:'hsl(135,70%,29%)', l:'10.5k+'},
-    ],
+// ── palette ────────────────────────────────────────────────────────────────
+const PALETTE = {
+  vars: {
+    '--bg':'#1a1a1a','--accent':'#FFD700','--fg-bright':'#e0e0e0',
+    '--fg-mid':'#707070','--fg-dim':'#585858','--fg-faint':'#4e4e4e',
+    '--fg-rule':'#3d3d3d','--border-strong':'#282828','--border-soft':'#2e2e2e',
+    '--border-dim':'#2a2a2a','--surface':'#202020','--surface-border':'#303030',
+    '--muted-bg':'#222222','--up-color':'#3d8a4e','--dn-color':'#943030',
   },
-
-  // Perceptually uniform — each step looks equally different to human eyes.
-  // Purple → blue → teal → green → yellow. Colorblind-safe.
-  viridis: {
-    vars: {
-      '--bg':'#191e1e','--accent':'#5ec8b0','--fg-bright':'#d8e8e4',
-      '--fg-mid':'#607872','--fg-dim':'#4e5e5a','--fg-faint':'#3c4c48',
-      '--fg-rule':'#2a3b39','--border-strong':'#1e2e2c','--border-soft':'#243330',
-      '--border-dim':'#222f2d','--surface':'#1a2120','--surface-border':'#263533',
-      '--muted-bg':'#1b2521','--up-color':'#5ec8b0','--dn-color':'#6b3090',
-    },
-    lightVars: {
-      '--bg':'#f0f8f6','--accent':'#1e7060','--fg-bright':'#0a1e1c',
-      '--fg-mid':'#446058','--fg-dim':'#556868','--fg-faint':'#7a9890',
-      '--fg-rule':'#bee4dc','--border-strong':'#c4dcd8','--border-soft':'#d0e4e0',
-      '--border-dim':'#deedea','--surface':'#f8fffd','--surface-border':'#c8e0da',
-      '--muted-bg':'#e0f0ec','--up-color':'#1a7060','--dn-color':'#6028a0',
-    },
-    anchors: [
-      [7500, 280,66,28],[8000, 268,58,33],[8500, 248,50,37],
-      [9000, 204,49,37],[9500, 160,48,43],[10000,152,55,46],
-      [10500,100,62,52],[11000, 55,98,57],
-    ],
-    gradient: 'linear-gradient(to right,#440154,#31688e,#35b779,#fde725)',
-    swatches: [
-      {c:'#440154', l:'< 8k'},
-      {c:'#31688e', l:'8–9.5k'},
-      {c:'#35b779', l:'9.5–10k'},
-      {c:'#84d44b', l:'10k ✓'},
-      {c:'#fde725', l:'10.5k+'},
-    ],
+  lightVars: {
+    '--bg':'#f9f8f2','--accent':'#7a5a00','--fg-bright':'#111111',
+    '--fg-mid':'#555555','--fg-dim':'#666666','--fg-faint':'#888888',
+    '--fg-rule':'#cccccc','--border-strong':'#d8d8d0','--border-soft':'#e4e4dc',
+    '--border-dim':'#eeeee8','--surface':'#ffffff','--surface-border':'#ddddd8',
+    '--muted-bg':'#e8e8e2','--up-color':'#2a6e38','--dn-color':'#8b2020',
   },
-
-  // Perceptually uniform, high-energy. Deep indigo → magenta → orange → yellow.
-  // Maximum visual punch. Used in scientific rendering where detail matters most.
-  plasma: {
-    vars: {
-      '--bg':'#1c1820','--accent':'#e478fa','--fg-bright':'#eeddf5',
-      '--fg-mid':'#7a6882','--fg-dim':'#5a5062','--fg-faint':'#524860',
-      '--fg-rule':'#38283e','--border-strong':'#2a1e30','--border-soft':'#2f2435',
-      '--border-dim':'#2b2131','--surface':'#201c24','--surface-border':'#3a2840',
-      '--muted-bg':'#1f1923','--up-color':'#e8a030','--dn-color':'#7c02a7',
-    },
-    lightVars: {
-      '--bg':'#f8f4fc','--accent':'#7a18b8','--fg-bright':'#1a0828',
-      '--fg-mid':'#604870','--fg-dim':'#705880','--fg-faint':'#907898',
-      '--fg-rule':'#d4c0e4','--border-strong':'#d0c0e0','--border-soft':'#dcd0ee',
-      '--border-dim':'#e8e0f4','--surface':'#fcf8ff','--surface-border':'#ccc0e0',
-      '--muted-bg':'#ece0f8','--up-color':'#b05000','--dn-color':'#7000a0',
-    },
-    anchors: [
-      [7500, 243,84,28],[8000, 272,85,32],[8500, 290,80,35],
-      [9000, 315,72,38],[9500, 337,58,50],[10000, 20,90,55],
-      [10500, 42,92,56],[11000, 60,87,54],
-    ],
-    gradient: 'linear-gradient(to right,#0d0887,#7c02a7,#cc4778,#f89441,#f0f921)',
-    swatches: [
-      {c:'#0d0887', l:'< 8k'},
-      {c:'#cc4778', l:'8–9.5k'},
-      {c:'#f89441', l:'9.5–10k'},
-      {c:'#f8c541', l:'10k ✓'},
-      {c:'#f0f921', l:'10.5k+'},
-    ],
-  },
-
-  // Single-hue monochromatic amber. Design restraint — varies only in
-  // lightness and saturation. Coheres with a warm, ember-like identity.
-  ember: {
-    vars: {
-      '--bg':'#1d1916','--accent':'#cc7733','--fg-bright':'#e8d0b8',
-      '--fg-mid':'#756050','--fg-dim':'#584840','--fg-faint':'#4e4038',
-      '--fg-rule':'#3a2e24','--border-strong':'#2e2218','--border-soft':'#33271f',
-      '--border-dim':'#2f251d','--surface':'#211d18','--surface-border':'#3c2c1e',
-      '--muted-bg':'#231f18','--up-color':'#e09040','--dn-color':'#501a08',
-    },
-    lightVars: {
-      '--bg':'#faf6f0','--accent':'#8a4a10','--fg-bright':'#2a1408',
-      '--fg-mid':'#705840','--fg-dim':'#7a6050','--fg-faint':'#9a8070',
-      '--fg-rule':'#e0d0c0','--border-strong':'#d8c8b8','--border-soft':'#e4d8c8',
-      '--border-dim':'#eeddd0','--surface':'#fffaf4','--surface-border':'#d8c8b0',
-      '--muted-bg':'#eee0d0','--up-color':'#8a5010','--dn-color':'#6a2008',
-    },
-    anchors: [
-      [7500,  28,30,10],[8000,  28,40,15],[8500,  28,55,22],
-      [9000,  30,65,30],[9500,  33,72,40],[10000, 36,80,50],
-      [10500, 40,85,58],[11000, 45,90,65],
-    ],
-    gradient: 'linear-gradient(to right,#1a0a03,#5c2a08,#b05a18,#e08030,#f0c060)',
-    swatches: [
-      {c:'#1a0a03', l:'< 8k'},
-      {c:'#6a3010', l:'8–9.5k'},
-      {c:'#b05a18', l:'9.5–10k'},
-      {c:'#d88030', l:'10k ✓'},
-      {c:'#f0c060', l:'10.5k+'},
-    ],
-  },
-
-  // Sequential cool blues. Inverts the convention — cool/dark is low, bright
-  // is high. Elegant and unusual; familiar from oceanographic data maps.
-  depth: {
-    vars: {
-      '--bg':'#191f2a','--accent':'#4db8ff','--fg-bright':'#d0e8f8',
-      '--fg-mid':'#5a7080','--fg-dim':'#486070','--fg-faint':'#425568',
-      '--fg-rule':'#22303c','--border-strong':'#1e2c3c','--border-soft':'#25313e',
-      '--border-dim':'#23303c','--surface':'#1b2130','--surface-border':'#273545',
-      '--muted-bg':'#1a2430','--up-color':'#4db8ff','--dn-color':'#1a3080',
-    },
-    lightVars: {
-      '--bg':'#f0f6fc','--accent':'#1a6090','--fg-bright':'#081828',
-      '--fg-mid':'#405870','--fg-dim':'#4a6878','--fg-faint':'#6a8898',
-      '--fg-rule':'#bcd4e8','--border-strong':'#c4d8e8','--border-soft':'#d0e4f0',
-      '--border-dim':'#deeef8','--surface':'#f4faff','--surface-border':'#c0d8ec',
-      '--muted-bg':'#dceef8','--up-color':'#1878b8','--dn-color':'#1020a0',
-    },
-    anchors: [
-      [7500, 220,60,18],[8000, 218,58,24],[8500, 215,60,30],
-      [9000, 205,62,36],[9500, 192,64,42],[10000,180,62,48],
-      [10500,192,70,60],[11000,200,80,72],
-    ],
-    gradient: 'linear-gradient(to right,#0a1a3a,#1a4878,#1e88a0,#38bcd8,#a0e8f8)',
-    swatches: [
-      {c:'#0a1a3a', l:'< 8k'},
-      {c:'#1a4878', l:'8–9.5k'},
-      {c:'#1e88a0', l:'9.5–10k'},
-      {c:'#38bcd8', l:'10k ✓'},
-      {c:'#a0e8f8', l:'10.5k+'},
-    ],
-  },
+  anchors: [
+    [7500,   0, 80, 40],[8000,   8, 80, 45],[8500,  18, 80, 48],
+    [9000,  30, 82, 48],[9500,  48, 85, 48],[10000, 88, 65, 37],
+    [10500,115, 65, 32],[11000,135, 70, 27],
+  ],
+  gradient: 'linear-gradient(to right,hsl(0,80%,40%),hsl(20,80%,48%),hsl(48,85%,48%),hsl(90,65%,37%),hsl(135,70%,29%))',
+  swatches: [
+    {c:'hsl(0,80%,40%)',   l:'< 8k'},
+    {c:'hsl(25,80%,48%)',  l:'8–9.5k'},
+    {c:'hsl(48,85%,48%)',  l:'9.5–10k'},
+    {c:'hsl(90,65%,37%)',  l:'10k ✓'},
+    {c:'hsl(135,70%,29%)', l:'10.5k+'},
+  ],
 };
 
 const GOAL = 10000;
 
-// Active anchor set (mutated when palette switches)
-let activeAnchors  = PALETTES.spectral.anchors;
-let currentMode    = 'light';
-let currentPalette = 'spectral';
+let currentMode = 'light';
 
 // ── parse ──────────────────────────────────────────────────────────────────
 function parse(raw) {
@@ -885,13 +696,8 @@ function buildMap(data) {
   return m;
 }
 
-function findMinMax(data) {
-  let minEntry = data[0], maxEntry = data[0];
-  data.forEach(d => {
-    if (d.steps < minEntry.steps) minEntry = d;
-    if (d.steps > maxEntry.steps) maxEntry = d;
-  });
-  return { minKey: minEntry.date, maxKey: maxEntry.date };
+function findBestDay(data) {
+  return data.reduce((best, d) => d.steps > best.steps ? d : best, data[0]).date;
 }
 
 function findBestWeek(data) {
@@ -923,7 +729,7 @@ function findBestWeek(data) {
 
 // ── color ──────────────────────────────────────────────────────────────────
 function interpolateHSL(s) {
-  const A = activeAnchors;
+  const A = PALETTE.anchors;
   if (s <= A[0][0]) return A[0].slice(1);
   for (let i = 1; i < A.length; i++) {
     if (s <= A[i][0]) {
@@ -944,19 +750,11 @@ function stepsToColor(s) {
 }
 
 // ── formatting ─────────────────────────────────────────────────────────────
+const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
 function fmt(n) { return n.toLocaleString(); }
-
-function fmtDate(s) {
-  const [y, m, d] = s.split('-');
-  const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-  return `${months[+m-1]} ${+d}, ${y}`;
-}
-
-function fmtDateShort(s) {
-  const [, m, d] = s.split('-');
-  const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-  return `${months[+m-1]} ${+d}`;
-}
+function fmtDate(s)      { const [y,m,d] = s.split('-'); return `${MONTHS[+m-1]} ${+d}, ${y}`; }
+function fmtDateShort(s) { const [,m,d]  = s.split('-'); return `${MONTHS[+m-1]} ${+d}`; }
 
 // ── day-of-year helpers ─────────────────────────────────────────────────────
 function dayOfYearToISO(day, year) {
@@ -980,19 +778,13 @@ function isoWeekNum(date) {
 
 // ── stats ──────────────────────────────────────────────────────────────────
 function calcStats(data) {
-  const total  = data.reduce((s, d) => s + d.steps, 0);
-  const avg    = Math.round(total / data.length);
-  const atGoal = data.filter(d => d.steps >= 10000).length;
-  let streak = 0;
-  for (let i = data.length - 1; i >= 0; i--) {
-    if (data[i].steps >= 10000) streak++;
-    else break;
-  }
-  const { maxKey: bestDayDate } = data.length ? findMinMax(data) : { maxKey: null };
-  const bestDayEntry = bestDayDate ? data.find(d => d.date === bestDayDate) : null;
-  const bestDaySteps = bestDayEntry ? bestDayEntry.steps : 0;
+  const total       = data.reduce((s, d) => s + d.steps, 0);
+  const avg         = Math.round(total / data.length);
+  const atGoal      = data.filter(d => d.steps >= GOAL).length;
+  const bestDayDate = data.length ? findBestDay(data) : null;
+  const bestDaySteps = bestDayDate ? data.find(d => d.date === bestDayDate).steps : 0;
   const { startDate: bestWeekStart, endDate: bestWeekEnd, total: bestWeekTotal } = findBestWeek(data);
-  return { total, avg, atGoal, streak, days: data.length, bestDayDate, bestDaySteps, bestWeekStart, bestWeekEnd, bestWeekTotal };
+  return { total, avg, atGoal, days: data.length, bestDayDate, bestDaySteps, bestWeekStart, bestWeekEnd, bestWeekTotal };
 }
 
 function renderStats(stats) {
@@ -1037,7 +829,7 @@ function renderMonths(dataMap) {
     let goalCount = 0, dataCount = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       const key = `${year}-${mm}-${String(d).padStart(2, '0')}`;
-      if (dataMap[key] !== undefined) { dataCount++; if (dataMap[key] >= 10000) goalCount++; }
+      if (dataMap[key] !== undefined) { dataCount++; if (dataMap[key] >= GOAL) goalCount++; }
     }
 
     // DOW header with "wk" label in the first column
@@ -1190,7 +982,6 @@ function renderAll(cutoffISO) {
   currentCutoff      = cutoffISO;
   const filtered     = data.filter(d => d.date <= cutoffISO);
   currentFilteredMap = buildMap(filtered);
-  ({ minKey, maxKey } = filtered.length ? findMinMax(filtered) : { minKey: null, maxKey: null });
   updateStats(calcStats(filtered));
   updateCells(cutoffISO);
   updateMonthSubs(currentFilteredMap);
@@ -1200,21 +991,15 @@ function renderAll(cutoffISO) {
   sl.style.setProperty('--last-data', (lastDataDay / 365 * 100).toFixed(1) + '%');
 }
 
-// ── palette switcher ────────────────────────────────────────────────────────
-function applyPalette(key) {
-  const p    = PALETTES[key];
+// ── palette apply ────────────────────────────────────────────────────────────
+function applyPalette() {
   const root = document.documentElement;
-  const vars = currentMode === 'dark' ? p.vars : p.lightVars;
+  const vars = currentMode === 'dark' ? PALETTE.vars : PALETTE.lightVars;
   Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
-  activeAnchors  = p.anchors;
-  currentPalette = key;
-  document.getElementById('palette-sel').value = key;
-  renderMonths(dataMap);                              // full rebuild — palette change
-  if (currentCutoff) {
-    updateCells(currentCutoff);                       // re-apply filter
-    updateMonthSubs(currentFilteredMap);
-  }
-  renderLegend(p);
+  renderMonths(dataMap);
+  updateCells(currentCutoff);
+  updateMonthSubs(currentFilteredMap);
+  renderLegend(PALETTE);
 }
 
 function toggleMode() {
@@ -1225,12 +1010,7 @@ function toggleMode() {
   btn.setAttribute('aria-label', label);
   btn.setAttribute('title', label);
   document.body.classList.toggle('light-mode', currentMode === 'light');
-  applyPalette(currentPalette);
-}
-
-// ── year progress bar ───────────────────────────────────────────────────────
-function renderProgress() {
-  // today marker removed — circle thumb is the single end-of-data marker
+  applyPalette();
 }
 
 // ── tooltip ─────────────────────────────────────────────────────────────────
@@ -1305,19 +1085,15 @@ function setupTooltip() {
 // ── init ───────────────────────────────────────────────────────────────────
 const data    = parse(CSV);
 const dataMap = buildMap(data);
-let minKey, maxKey, currentCutoff, currentFilteredMap;
+let currentCutoff      = data[data.length - 1].date;
+let currentFilteredMap = dataMap;
 
-// Seed module state from full dataset before any rendering
-const lastDataISO  = data[data.length - 1].date;
-const lastDataDay  = isoToDayOfYear(lastDataISO);
-currentCutoff      = lastDataISO;
-currentFilteredMap = dataMap;
-({ minKey, maxKey } = findMinMax(data));
+const lastDataISO = data[data.length - 1].date;
+const lastDataDay = isoToDayOfYear(lastDataISO);
 
 document.getElementById('days-tracked').textContent =
   `${data.length} of 365 days · ${Math.round(data.length / 365 * 100)}% of year`;
 document.body.classList.add('light-mode');
-renderProgress();
 const initialStats = calcStats(data);
 renderStats(initialStats);   // build stat card DOM once
 renderRecords(initialStats); // build records line DOM once
@@ -1330,7 +1106,7 @@ slider.value = lastDataDay;    // start at last recorded date
 // Annotate the last-data marker
 document.getElementById('last-data-marker').title = `last data: ${fmtDate(lastDataISO)}`;
 
-applyPalette('spectral');
+applyPalette();
 setTimeout(() => {
   slider.value = lastDataDay;  // override any browser-restored form value
   renderAll(lastDataISO);
@@ -1347,7 +1123,6 @@ slider.addEventListener('input', e => {
   e.target.value = clamped;
   renderAll(dayOfYearToISO(clamped, 2026));
 });
-document.getElementById('palette-sel').addEventListener('change', e => applyPalette(e.target.value));
 document.getElementById('mode-btn').addEventListener('click', toggleMode);
 document.getElementById('months').addEventListener('click', e => {
   const hdr = e.target.closest('.empty-group-hdr');
