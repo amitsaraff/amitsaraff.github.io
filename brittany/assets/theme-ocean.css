@@ -1,0 +1,31 @@
+/* Ocean Depths — Maritime theme for Brittany 2026 */
+
+:root {
+  --navy: #1a2332;
+  --blue: #2d8b8b;
+  --blue-lt: #dff0f0;
+  --green: #2d7b6b;
+  --green-lt: #def3ec;
+  --amber: #b87333;
+  --amber-lt: #fdf2e1;
+  --red: #b84040;
+  --red-lt: #fce8e8;
+  --grey: #5a6872;
+  --grey-lt: #eef2f4;
+  --border: #d5dfe3;
+  --text: #1a2332;
+  --text-s: #5a6872;
+  --bg: #ffffff;
+  --bg-s: #f4f9f8;
+  --accent: #2d8b8b;
+  --accent-lt: #a8dadc;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(26,35,50,.06), 0 1px 2px rgba(26,35,50,.04);
+
+  --base1-color: #c17828;
+  --base1-lt: #fdf2e9;
+  --base2-color: #2d7b6b;
+  --base2-lt: #e4f3ee;
+  --tab-active: #a8dadc;
+  --header-bg: #1a2332;
+}

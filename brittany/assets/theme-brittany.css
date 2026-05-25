@@ -1,0 +1,31 @@
+/* Brittany Côte — Granite & sand theme for Brittany 2026 */
+
+:root {
+  --navy: #2c3e50;
+  --blue: #5b8c9e;
+  --blue-lt: #e4eff3;
+  --green: #5a8a6c;
+  --green-lt: #e6f0ea;
+  --amber: #b8860b;
+  --amber-lt: #fdf3d7;
+  --red: #b5463a;
+  --red-lt: #fce8e6;
+  --grey: #7a7d80;
+  --grey-lt: #f0ece4;
+  --border: #ddd5c8;
+  --text: #2c3e50;
+  --text-s: #6b7068;
+  --bg: #ffffff;
+  --bg-s: #f8f5ef;
+  --accent: #5b8c9e;
+  --accent-lt: #d4b896;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(44,62,80,.06), 0 1px 2px rgba(44,62,80,.04);
+
+  --base1-color: #b8860b;
+  --base1-lt: #fdf3d7;
+  --base2-color: #5a8a6c;
+  --base2-lt: #e6f0ea;
+  --tab-active: #d4b896;
+  --header-bg: #2c3e50;
+}
