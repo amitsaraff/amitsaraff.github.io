@@ -1,0 +1,138 @@
+/* ============================================================
+   Brittany 2026 — "Fun layer"
+   Additive personality on top of style.css. Linked on the 6 main
+   pages only (not archive). Safe / non-breaking overrides.
+   ============================================================ */
+
+:root {
+  --sun: #e8a23d;       /* warm gold   */
+  --terra: #c8553d;     /* terracotta  */
+  --sea: #1f8a82;       /* gulf teal   */
+  --sand: #f6efe2;      /* warm paper  */
+  --granite: #5b6b73;   /* stone grey  */
+}
+
+/* Warm the page background a touch (paper, not flat grey) */
+body { background: var(--sand); }
+
+/* Header: subtle coastal gradient + a Breton-flag accent stripe */
+.header, .page-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #225a6f 58%, #1c6f68 100%);
+  position: relative;
+}
+.header::before, .page-header::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--sun) 0%, var(--terra) 50%, var(--sea) 100%);
+}
+
+/* Nav brand gets a tiny flag */
+.project-nav .nav-brand::before { content: "🇫🇷 "; }
+
+/* ---------- TODAY hero ---------- */
+.today {
+  background: linear-gradient(135deg, #ffffff 0%, var(--sand) 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.today::after { /* faint sun in the corner */
+  content: ""; position: absolute; right: -40px; top: -40px;
+  width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,162,61,.18), transparent 70%);
+  pointer-events: none;
+}
+.today-lead { min-height: 88px; }
+.cd-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 4.2rem; line-height: .9; color: var(--terra);
+}
+.cd-lbl { font-size: 1.05rem; font-weight: 600; color: var(--navy); margin-top: 4px; }
+.today-lead .badge-day {
+  display: inline-block; background: var(--sea); color: #fff;
+  font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 999px; margin-bottom: 8px;
+}
+.today-lead h2 {
+  font-family: 'DM Serif Display', serif; font-size: 1.7rem;
+  color: var(--navy); margin: 0 0 8px;
+}
+.today-lead .plan-now { font-size: 1rem; }
+.today-lead .plan-now .dtype {
+  display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .03em; padding: 2px 7px; border-radius: 999px; margin-right: 6px; vertical-align: middle;
+}
+.dt-travel{ background:var(--navy); color:#fff; }
+.dt-active{ background:var(--blue-lt); color:var(--blue); }
+.dt-medium{ background:var(--amber-lt); color:var(--amber); }
+.dt-rest{ background:var(--green-lt); color:var(--green); }
+.dt-move{ background:#ede9fe; color:#6d28d9; }
+.today-lead .sub { font-size: 13px; color: var(--text-s); margin-top: 8px; }
+.today-lead .preview { margin-top: 12px; font-size: 12px; color: var(--text-s); }
+.today-lead .preview select {
+  font: inherit; font-size: 12px; padding: 3px 6px; border-radius: 6px;
+  border: 1px solid var(--border); background: #fff; color: var(--text); margin-left: 4px;
+}
+
+/* weather widget */
+.wx {
+  background: #fff; border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px 18px; display: flex; gap: 14px; align-items: center; position: relative;
+}
+.wx-live { font-size: 10px; font-weight: 700; color: var(--sea); text-transform: uppercase;
+  letter-spacing: .05em; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 3px; }
+.wx-live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--sea); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.wx-ic { font-size: 3rem; line-height: 1; }
+.wx-main { flex: 1; }
+.wx-temp { font-family: 'DM Serif Display', serif; font-size: 2.1rem; color: var(--navy); line-height: 1; }
+.wx-desc { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 2px; }
+.wx-meta { font-size: 12px; color: var(--text-s); margin-top: 3px; }
+.wx-side { text-align: right; border-left: 1px solid var(--border); padding-left: 14px; align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.wx-loc { font-weight: 700; font-size: 13px; color: var(--navy); }
+.wx-sub { font-size: 11px; color: var(--text-s); }
+.wx-sun { font-size: 12px; color: var(--text-s); }
+.wx-tide { font-size: 12px; font-weight: 600; color: var(--sea); text-decoration: none; margin-top: 2px; }
+.wx-tide:hover { text-decoration: underline; }
+
+/* ---------- Illustrated map ---------- */
+.mapcard { background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); overflow:hidden; margin-bottom:20px; }
+.mapcard .map-cap { padding:10px 16px; font-size:12.5px; color:var(--text-s); border-top:1px solid var(--border); background:var(--bg-s); }
+.mapcard svg { display:block; width:100%; height:auto; }
+
+/* ---------- Sofia's spotting list ---------- */
+.spotwrap { background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); padding:16px 18px; margin-bottom:20px; }
+.spot-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.spot-head h3 { font-family:'DM Serif Display',serif; font-size:1.3rem; color:var(--navy); margin:0; }
+.spot-count { font-size:13px; font-weight:700; color:var(--sea); }
+.spot-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+.spot {
+  border:1.5px solid var(--border); border-radius:12px; padding:12px 6px; text-align:center;
+  cursor:pointer; background:var(--bg-s); transition:transform .12s, border-color .15s, background .15s;
+  user-select:none; position:relative; filter:grayscale(.85) opacity(.7);
+}
+.spot:hover { transform:translateY(-2px); border-color:var(--sun); }
+.spot .emo { font-size:1.9rem; line-height:1; }
+.spot .lab { font-size:11px; font-weight:600; color:var(--text-s); margin-top:5px; }
+.spot.got { filter:none; background:linear-gradient(135deg,#fff,var(--sand)); border-color:var(--sea); }
+.spot.got::after { content:"✓"; position:absolute; top:5px; right:7px; color:var(--sea); font-weight:800; font-size:13px; }
+.spot.got .lab { color:var(--navy); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 760px) {
+  .today { grid-template-columns: 1fr; gap: 14px; padding: 16px; }
+  .cd-num { font-size: 3.2rem; }
+  .today-lead h2 { font-size: 1.35rem; }
+  .spot-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 420px) {
+  .spot-grid { grid-template-columns: repeat(2, 1fr); }
+}
