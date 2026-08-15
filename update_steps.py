@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -46,15 +47,49 @@ def cdp(*args, timeout="20s") -> dict:
 
 
 def find_garmin_target() -> str:
-    """Return the CDP target ID of the Garmin Connect steps tab."""
+    """Return the CDP target ID of the Garmin Connect steps tab, opening it if needed."""
     data = cdp("pages")
     for page in data.get("pages", []):
         if GARMIN_URL in page.get("url", ""):
             return page["id"]
-    sys.exit(
-        f"No Garmin Connect tab found at {GARMIN_URL}.\n"
-        "Open that URL in Chrome, then re-run this script."
-    )
+
+    print(f"No Garmin tab open — opening {GARMIN_URL} ...")
+    cdp("open", GARMIN_URL)
+
+    target_id = None
+    for _ in range(15):
+        time.sleep(1)
+        data = cdp("pages")
+        for page in data.get("pages", []):
+            url = page.get("url", "")
+            if GARMIN_URL in url or "garmin.com" in url:
+                target_id = page["id"]
+                break
+        if target_id:
+            break
+    if not target_id:
+        sys.exit(f"Timed out opening {GARMIN_URL}.")
+
+    data = cdp("pages")
+    page = next(p for p in data["pages"] if p["id"] == target_id)
+    if "sso.garmin.com" in page.get("url", "") or "signin" in page.get("url", "").lower():
+        input("Log in to Garmin Connect in the opened browser tab, then press Enter to continue...")
+        time.sleep(1)
+
+    data = cdp("pages")
+    for page in data.get("pages", []):
+        if GARMIN_URL in page.get("url", ""):
+            return page["id"]
+
+    # Login redirected away from the report page — navigate back to it.
+    cdp("open", GARMIN_URL, "--new-tab=false", "--target", target_id)
+    time.sleep(2)
+    data = cdp("pages")
+    for page in data.get("pages", []):
+        if GARMIN_URL in page.get("url", ""):
+            return page["id"]
+
+    sys.exit(f"Still couldn't reach {GARMIN_URL} after login.")
 
 
 def eval_js(target_id: str, js: str) -> str:
@@ -64,7 +99,15 @@ def eval_js(target_id: str, js: str) -> str:
 
 
 def click_export(target_id: str) -> None:
-    """Click the Export button on the Garmin report page."""
+    """Wait for the report to finish rendering, then click the Export button."""
+    for _ in range(15):
+        data = cdp("html", EXPORT_BTN_SEL, "--target", target_id)
+        if data.get("html", {}).get("count"):
+            break
+        time.sleep(1)
+    else:
+        sys.exit("Export button never appeared — report page may not have finished loading.")
+
     cdp("click", EXPORT_BTN_SEL, "--target", target_id)
 
 
@@ -107,7 +150,6 @@ def latest_download(before: datetime) -> Path | None:
 
 def fetch_via_export(target_id: str) -> dict[str, int]:
     """Click Export, wait for the download to land, then parse it."""
-    import time
     before = datetime.now()
     click_export(target_id)
     # Poll for up to 15 seconds
