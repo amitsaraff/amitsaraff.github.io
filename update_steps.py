@@ -9,8 +9,8 @@ Usage:
 Requirements:
     pip install cdp-cli-python  # or use the `cdp` CLI via subprocess
     The cdp daemon must be running: cdp daemon start --auto-connect
-    A Garmin Connect tab must be open at:
-        https://connect.garmin.com/app/report/29/wellness/last_four_weeks
+    A Garmin Connect tab must be open at the current steps page, for example:
+        https://connect.garmin.com/app/steps/2026-09-14/2
 """
 
 import argparse
@@ -27,8 +27,20 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).parent
 HTML_FILE = REPO_ROOT / "10000" / "index.html"
 STEPS_CSV = REPO_ROOT / "steps.csv"
-GARMIN_URL = "https://connect.garmin.com/app/report/29/wellness/last_four_weeks"
-EXPORT_BTN_SEL = ".Report_exportBtn__6MES-"
+LEGACY_GARMIN_URL = "https://connect.garmin.com/app/report/29/wellness/last_four_weeks"
+GARMIN_URL = f"https://connect.garmin.com/app/steps/{datetime.now().strftime('%Y-%m-%d')}/2"
+EXPORT_BTN_SEL = "button, a, [role='button']"
+
+
+def page_matches_garmin(url: str) -> bool:
+    """Return True for the legacy report page and the current steps page."""
+    if not url:
+        return False
+    return (
+        "https://connect.garmin.com/app/steps/" in url
+        or "https://connect.garmin.com/app/report/" in url
+        or LEGACY_GARMIN_URL in url
+    )
 
 
 # ── CDP helpers ────────────────────────────────────────────────────────────────
@@ -50,7 +62,7 @@ def find_garmin_target() -> str:
     """Return the CDP target ID of the Garmin Connect steps tab, opening it if needed."""
     data = cdp("pages")
     for page in data.get("pages", []):
-        if GARMIN_URL in page.get("url", ""):
+        if page_matches_garmin(page.get("url", "")):
             return page["id"]
 
     print(f"No Garmin tab open — opening {GARMIN_URL} ...")
@@ -62,7 +74,7 @@ def find_garmin_target() -> str:
         data = cdp("pages")
         for page in data.get("pages", []):
             url = page.get("url", "")
-            if GARMIN_URL in url or "garmin.com" in url:
+            if page_matches_garmin(url) or "garmin.com" in url:
                 target_id = page["id"]
                 break
         if target_id:
@@ -78,15 +90,15 @@ def find_garmin_target() -> str:
 
     data = cdp("pages")
     for page in data.get("pages", []):
-        if GARMIN_URL in page.get("url", ""):
+        if page_matches_garmin(page.get("url", "")):
             return page["id"]
 
-    # Login redirected away from the report page — navigate back to it.
+    # Login redirected away from the steps page — navigate back to it.
     cdp("open", GARMIN_URL, "--new-tab=false", "--target", target_id)
     time.sleep(2)
     data = cdp("pages")
     for page in data.get("pages", []):
-        if GARMIN_URL in page.get("url", ""):
+        if page_matches_garmin(page.get("url", "")):
             return page["id"]
 
     sys.exit(f"Still couldn't reach {GARMIN_URL} after login.")
@@ -98,17 +110,49 @@ def eval_js(target_id: str, js: str) -> str:
     return data["result"]["value"]
 
 
-def click_export(target_id: str) -> None:
-    """Wait for the report to finish rendering, then click the Export button."""
-    for _ in range(15):
-        data = cdp("html", EXPORT_BTN_SEL, "--target", target_id)
-        if data.get("html", {}).get("count"):
-            break
-        time.sleep(1)
-    else:
-        sys.exit("Export button never appeared — report page may not have finished loading.")
+def click_export(target_id: str) -> bool:
+    """Click the actual Garmin Export CSV control, including the menu-triggered version."""
+    js = r'''
+    (() => {
+      const labelText = (el) => {
+        const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+        const label = (el.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
+        return (text + ' ' + label).replace(/\s+/g, ' ').trim();
+      };
 
-    cdp("click", EXPORT_BTN_SEL, "--target", target_id)
+      const menu = Array.from(document.querySelectorAll('button, [role="button"], div')).find((el) => {
+        const text = labelText(el);
+        const cls = (el.getAttribute('class') || '').replace(/\s+/g, ' ').trim();
+        return /Menu/.test(text) || /widget_menu_title/.test(cls);
+      });
+      if (menu) {
+        menu.click();
+      }
+
+      const candidates = Array.from(document.querySelectorAll('button, [role="button"], a, div'));
+      const match = candidates.find((el) => /Export CSV/i.test(labelText(el)));
+      if (!match) return false;
+
+      const clickable = match.matches && match.matches('button, [role="button"]')
+        ? match
+        : match.querySelector && match.querySelector('button, [role="button"]');
+
+      if (clickable) {
+        clickable.click();
+        return true;
+      }
+
+      match.click();
+      return true;
+    })()
+    '''
+
+    for _ in range(20):
+        if eval_js(target_id, js):
+            return True
+        time.sleep(1)
+
+    return False
 
 
 # ── CSV parsing ────────────────────────────────────────────────────────────────
@@ -135,6 +179,40 @@ def parse_garmin_csv(text: str) -> dict[str, int]:
     return rows
 
 
+def parse_percent_goal_row(raw: str, year: int | None = None) -> tuple[str, int, int]:
+    """Parse a value like 'Sep 13 82% of 10,980' into (YYYY-MM-DD, steps, goal)."""
+    match = re.search(r"([A-Z][a-z]{2})\s+(\d{1,2})\s+(\d+(?:\.\d+)?)%\s+of\s+([\d,]+)", raw.strip())
+    if not match:
+        raise ValueError(f"Unrecognized percentage row: {raw!r}")
+
+    month = datetime.strptime(match.group(1), "%b").month
+    day = int(match.group(2))
+    pct = float(match.group(3))
+    goal = int(match.group(4).replace(",", ""))
+    year = year or datetime.now().year
+    iso = datetime(year, month, day).strftime("%Y-%m-%d")
+    steps = round(pct / 100 * goal)
+    return iso, steps, goal
+
+
+def parse_day_rows(rows: list[str] | str, year: int | None = None) -> dict[str, tuple[int, int]]:
+    """Parse a Garmin 'Date / % of Goal' table into {YYYY-MM-DD: (steps, goal)}."""
+    if isinstance(rows, str):
+        rows = rows.splitlines()
+
+    parsed: dict[str, tuple[int, int]] = {}
+    for raw in rows:
+        text = (raw or "").strip()
+        if not text or text.lower().startswith("date"):
+            continue
+        try:
+            iso, steps, goal = parse_percent_goal_row(text, year=year)
+        except ValueError:
+            continue
+        parsed[iso] = (steps, goal)
+    return parsed
+
+
 # ── Download via Export button → find newest CSV in ~/Downloads ────────────────
 
 def latest_download(before: datetime) -> Path | None:
@@ -149,52 +227,72 @@ def latest_download(before: datetime) -> Path | None:
 
 
 def fetch_via_export(target_id: str) -> dict[str, int]:
-    """Click Export, wait for the download to land, then parse it."""
+    """Click Export when available, otherwise fall back to reading the visible step table."""
     before = datetime.now()
-    click_export(target_id)
-    # Poll for up to 15 seconds
-    for _ in range(15):
-        time.sleep(1)
-        path = latest_download(before)
-        if path:
-            print(f"Downloaded: {path}")
-            return parse_garmin_csv(path.read_text(encoding="utf-8-sig"))
-    sys.exit("Timed out waiting for the CSV download.")
+    if click_export(target_id):
+        for _ in range(15):
+            time.sleep(1)
+            path = latest_download(before)
+            if path:
+                print(f"Downloaded: {path}")
+                return parse_garmin_csv(path.read_text(encoding="utf-8-sig"))
+        sys.exit("Timed out waiting for the CSV download.")
+
+    print("No legacy export button detected on the current Garmin page; falling back to DOM parsing.")
+    steps, _ = fetch_via_dom(target_id)
+    return steps
 
 
 # ── Alternative: read data directly from the DOM via JS ───────────────────────
 
-def fetch_via_dom(target_id: str) -> dict[str, int]:
-    """
-    Extract step data rendered in the Garmin report DOM (table rows or SVG
-    tooltips).  Falls back gracefully if the DOM structure has changed.
-    """
-    js = """
-    (function() {
-      var rows = Array.from(document.querySelectorAll('table tr'));
-      var out = {};
-      var YEAR = new Date().getFullYear();
-      var MONTHS = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
-      rows.forEach(function(tr) {
-        var cells = Array.from(tr.querySelectorAll('td')).map(function(td){ return td.textContent.trim(); });
-        if (cells.length < 2) return;
-        // cells[0]: "May 4"  cells[1]: "113% of 11,520"
-        var dateMatch = cells[0].match(/(\\w+)\\s+(\\d+)/);
-        var pctMatch  = cells[1].match(/(\\d+(?:\\.\\d+)?)%\\s+of\\s+([\\d,]+)/);
-        if (!dateMatch || !pctMatch) return;
-        var m = MONTHS[dateMatch[1]]; if (!m) return;
-        var d = parseInt(dateMatch[2]);
-        var pct  = parseFloat(pctMatch[1]) / 100;
-        var goal = parseInt(pctMatch[2].replace(/,/g,''));
-        var steps = Math.round(pct * goal);
-        var iso = YEAR + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-        out[iso] = steps;
-      });
-      return JSON.stringify(out);
-    })()
-    """
-    raw = eval_js(target_id, js)
-    return json.loads(raw)
+def fetch_via_dom(target_id: str) -> tuple[dict[str, int], dict[str, int]]:
+    """Extract steps+goal data from the current Garmin 4-week daily table, expanding 'Show More' if needed."""
+    year = datetime.now().year
+    merged_steps: dict[str, int] = {}
+    merged_goals: dict[str, int] = {}
+
+    for _ in range(6):
+        js = r'''
+        (() => {
+          const table = Array.from(document.querySelectorAll('table')).find((t) => {
+            const text = (t.textContent || '').replace(/\s+/g, ' ').trim();
+            return /Date/i.test(text) && /Percent of Goal/i.test(text);
+          });
+          if (!table) return JSON.stringify([]);
+
+          const rows = [];
+          for (const tr of table.querySelectorAll('tr')) {
+            const cells = Array.from(tr.querySelectorAll('td')).map((td) => (td.textContent || '').replace(/\s+/g, ' ').trim());
+            if (cells.length < 2) continue;
+            const dateText = cells[0];
+            const pctText = cells[1];
+            if (!dateText || !/%/.test(pctText)) continue;
+            rows.push(dateText + ' ' + pctText);
+          }
+          return JSON.stringify(rows);
+        })()
+        '''
+        raw_rows = json.loads(eval_js(target_id, js))
+        for key, (steps, goal) in parse_day_rows(raw_rows, year=year).items():
+            merged_steps[key] = steps
+            merged_goals[key] = goal
+
+        clicked = eval_js(target_id, r'''
+        (() => {
+          const btn = Array.from(document.querySelectorAll('button')).find((el) => {
+            const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+            return /show more/i.test(text);
+          });
+          if (!btn) return false;
+          btn.click();
+          return true;
+        })()
+        ''')
+        if clicked is False or clicked == "false":
+            break
+        time.sleep(0.5)
+
+    return merged_steps, merged_goals
 
 
 # ── Patch HTML ────────────────────────────────────────────────────────────────
@@ -306,13 +404,11 @@ def main() -> None:
     print(f"Found Garmin tab: {target_id}")
 
     if args.dom_only:
-        # DOM extraction gives less data (only current week visible in table)
-        new_data = fetch_via_dom(target_id)
-        garmin_goals: dict[str, int] = {}
+        new_data, garmin_goals = fetch_via_dom(target_id)
     else:
-        # Export button downloads a full 4-week CSV
-        raw_download = fetch_via_export(target_id)
-        new_data = raw_download
+        # Prefer the live DOM on the current Garmin page; the export flow is still
+        # retained as a fallback when the page exposes a downloadable CSV.
+        new_data, garmin_goals = fetch_via_dom(target_id)
 
         # Re-parse the downloaded file for goal values
         downloads = Path.home() / "Downloads"
