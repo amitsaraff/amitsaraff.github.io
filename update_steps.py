@@ -27,7 +27,7 @@ from getpass import getpass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent
-HTML_FILE = REPO_ROOT / "10000" / "index.html"
+DATA_FILE = REPO_ROOT / "10000" / "steps.js"
 STEPS_CSV = REPO_ROOT / "steps.csv"
 
 
@@ -88,8 +88,8 @@ def read_steps_csv() -> dict[str, tuple[int, int]]:
 
 def update_files(new_data: dict[str, tuple[int, int | None]], dry_run: bool) -> None:
     """Merge exact counts and render both outputs before writing either file."""
-    html = HTML_FILE.read_text(encoding="utf-8")
-    match = re.search(r"(const CSV = `date,steps\n)(.*?)(`;)", html, re.DOTALL)
+    data_script = DATA_FILE.read_text(encoding="utf-8")
+    match = re.search(r"(const CSV = `date,steps\n)(.*?)(`;)", data_script, re.DOTALL)
     if not match:
         raise ValueError("Could not locate the dashboard's const CSV block.")
     existing = read_steps_csv()
@@ -120,9 +120,9 @@ def update_files(new_data: dict[str, tuple[int, int | None]], dry_run: bool) -> 
         writer.writerow([date.fromisoformat(day).strftime("%m/%d/%Y"), steps, goal])
 
     body = "".join(f"{day},{steps}\n" for day, (steps, _) in sorted(merged.items()))
-    new_html = html[:match.start(2)] + body + html[match.end(2):]
+    new_script = data_script[:match.start(2)] + body + data_script[match.end(2):]
 
-    for path, content in [(STEPS_CSV, csv_output.getvalue()), (HTML_FILE, new_html)]:
+    for path, content in [(STEPS_CSV, csv_output.getvalue()), (DATA_FILE, new_script)]:
         if path.read_text(encoding="utf-8") == content:
             print(f"{path.relative_to(REPO_ROOT)}: no changes.")
         elif dry_run:

@@ -1,409 +1,102 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="A year on foot. A personal record of daily steps, small routines, and a 10,000-step ambition.">
-<title>A year on foot · 2026</title>
-<style>
-*{box-sizing:border-box} :root{--paper:#f3f1e8;--ink:#203d32;--muted:#727b70;--line:#d8dcd0;--accent:#42765a;--soft:#e5e8dc;--selected:#b26136}body.dark{--paper:#182b24;--ink:#e9ebdc;--muted:#a6b2a4;--line:#3a4e40;--accent:#93b98c;--soft:#2a4033;--selected:#efad74}body{margin:0;background:var(--paper);color:var(--ink);font-family:Georgia,serif}button,a,input{-webkit-tap-highlight-color:transparent}button{cursor:pointer;color:inherit}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--selected);outline-offset:5px}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}.mono,button,.eyebrow{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.shell{max-width:1360px;margin:auto;padding:0 64px}nav{display:flex;justify-content:space-between;align-items:center;padding:28px 0;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.09em}nav button{background:none;border:0;font-size:11px}.hero{padding:65px 0 50px;display:grid;grid-template-columns:1fr 260px;gap:30px}.eyebrow{text-transform:uppercase;font-size:10px;letter-spacing:.15em;color:var(--muted)}h1{font-weight:400;font-size:clamp(65px,8vw,112px);letter-spacing:-.065em;line-height:.95;margin:22px 0}h1 em{font-weight:400}.intro{font-size:17px;color:var(--muted);line-height:1.6;margin-bottom:0}.total{align-self:end;padding-bottom:5px}.total strong{font-size:43px;font-weight:400;display:block;margin:12px 0}.total p{color:var(--muted);font-size:14px;line-height:1.6}.section-head{display:flex;justify-content:space-between;align-items:center;gap:20px}.section-head h2{font-size:24px;font-weight:400;margin:0}.section-head .mono{font-size:10px;color:var(--muted)}.landscape{border-top:1px solid var(--line);padding-top:25px}.chart-wrap{position:relative;margin-top:45px;padding-top:25px}.chart{height:230px;display:flex;align-items:flex-end;gap:2px;position:relative}.bar{padding:0;border:0;background:var(--accent);flex:1;min-width:0;position:relative;opacity:.68;border-radius:2px 2px 0 0}.bar.low{opacity:.3}.bar.empty{background:var(--line);height:2px!important;opacity:.7}.bar:hover,.bar.active{background:var(--selected);opacity:1}.goal{position:absolute;left:0;right:0;border-top:1px dashed var(--muted);pointer-events:none;z-index:1}.goal span{position:absolute;right:0;bottom:6px;font:9px ui-monospace,monospace;color:var(--muted);background:var(--paper);padding-left:8px}.axis{display:grid;grid-template-columns:repeat(12,1fr);padding:14px 0 20px;font:9px ui-monospace,monospace;color:var(--muted)}.detail{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 0;display:flex;align-items:center;gap:25px}.detail strong{font-size:30px;font-weight:400}.detail .mono{font-size:11px}.detail #day-note{color:var(--muted);margin-left:auto}.scrubber{display:flex;gap:16px;align-items:center;margin-top:16px;color:var(--muted);font-size:10px}input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}.stats{display:grid;grid-template-columns:repeat(3,1fr);padding:45px 0 55px;gap:30px}.stat+.stat{border-left:1px solid var(--line);padding-left:35px}.stat strong{display:block;font-size:46px;font-weight:400;margin:12px 0}.stat p{color:var(--muted);font-size:13px;margin:0}.calendar-section{padding:32px 0;border-top:1px solid var(--line)}.months{display:grid;grid-template-columns:repeat(4,1fr);gap:42px 48px;margin-top:35px}.month-title{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:15px;font-size:18px}.month-title span{font:9px ui-monospace,monospace;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.weekday{font:8px ui-monospace,monospace;color:var(--muted);text-align:center;margin-bottom:7px}.day{aspect-ratio:1;border:0;border-radius:3px;font:9px ui-monospace,monospace;background:var(--soft);color:var(--ink);padding:0}.day.hit{background:var(--accent);color:var(--paper)}.day.missing{background:transparent;border:1px solid var(--line);color:var(--muted)}.day.active{outline:2px solid var(--selected);outline-offset:1px}.legend{display:flex;gap:20px;justify-content:flex-end;font:9px ui-monospace,monospace;color:var(--muted);margin:30px 0}.legend i{display:inline-block;width:8px;height:8px;background:var(--accent);margin-right:6px}.legend .below{background:var(--soft)}footer{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding:24px 0 35px;color:var(--muted);font:10px ui-monospace,monospace}.mobile-controls{display:none} @media(min-width:1500px){.chart{height:280px}}@media(max-width:900px){.shell{padding:0 30px}.months{grid-template-columns:repeat(3,1fr);gap:32px}.hero{grid-template-columns:1fr 210px}.total strong{font-size:34px}}@media(max-width:600px){.shell{padding:0 22px}nav{padding:23px 0}.hero{grid-template-columns:1fr;padding:40px 0 30px;gap:20px}h1{font-size:70px}.total{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}.total strong{margin:0;font-size:30px}.total p{width:100%;margin:0}.section-head h2{font-size:22px}.section-head>.mono{display:none}.mobile-controls{display:flex;align-items:center;justify-content:space-between;margin-top:25px;font:11px ui-monospace,monospace}.mobile-controls button{background:none;border:1px solid var(--line);padding:8px 14px}.chart-wrap{margin-top:16px}.chart{gap:4px;height:190px}.axis{display:flex;justify-content:space-between}.detail{flex-wrap:wrap;gap:10px 18px}.detail #day-note{width:100%;margin:0}.detail strong{margin-left:auto}.stats{gap:12px;padding:30px 0}.stat+.stat{padding-left:12px}.stat strong{font-size:31px}.stat .eyebrow{font-size:8px;letter-spacing:.05em}.stat p{font-size:11px;line-height:1.5}.months{grid-template-columns:repeat(2,1fr);gap:28px 20px}.grid{gap:4px}.month-title span{font-size:8px}.legend{justify-content:flex-start}footer{font-size:9px;line-height:1.6}}
-.year-progress{width:100%;margin-top:24px}.year-progress-label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:10px;color:var(--muted)}.year-progress-label b{font-size:22px;font-weight:400;color:var(--ink)}.year-progress progress{display:block;width:100%;height:6px;margin:12px 0;appearance:none;border:0;border-radius:9px;overflow:hidden;background:var(--line);accent-color:var(--accent)}.year-progress progress::-webkit-progress-bar{background:var(--line)}.year-progress progress::-webkit-progress-value{background:var(--accent)}.year-progress progress::-moz-progress-bar{background:var(--accent)}.year-progress .year-target{font-size:10px;color:var(--muted);line-height:1.6}
-/* Keep the overview quiet; supporting detail is available on demand. */
-.shell{max-width:1160px}.hero{padding:60px 0;align-items:center}.hero h1{font-size:clamp(60px,7vw,90px);margin:0 0 20px}.total{align-self:center}.total strong{font-size:38px}.intro{font-size:15px}.year-progress{margin-top:22px}.year-progress-label b{font-size:18px}.section-head h2{font-size:21px}.chart-wrap{margin-top:28px}.detail{border-bottom:0;padding:16px 0 6px}.detail strong{font-size:24px}.scrubber{margin-bottom:30px}.more-details{border-top:1px solid var(--line)}.more-details summary{cursor:pointer;padding:24px 0;font:11px ui-monospace,monospace;color:var(--muted)}.more-details summary:hover{color:var(--ink)}.more-details summary:focus-visible{outline:2px solid var(--selected);outline-offset:3px}.more-details .stats{padding-top:15px}.more-details .calendar-section{border-top:0;padding-top:10px}footer{padding-top:20px}
-@media(max-width:600px){.hero{padding:35px 0;gap:30px}.hero h1{font-size:64px}.total{display:block}.total strong{margin-top:10px;font-size:32px}.year-progress{margin-top:18px}.detail #day-note{font-size:10px}.chart-wrap{margin-top:16px}}
-.stats{border-top:1px solid var(--line);padding:28px 0 35px}.stat strong{font-size:36px;margin:10px 0}.landscape{margin-bottom:24px}.bar{display:block;cursor:default}#calendar-detail{font-size:11px;color:var(--muted);margin-top:24px}@media(max-width:600px){.stat strong{font-size:29px}}
-.chart-readout{font:11px ui-monospace,monospace;color:var(--muted);min-height:16px;min-width:205px;text-align:right;font-variant-numeric:tabular-nums}.bar{min-height:3px}.bar:hover{background:var(--accent);opacity:.68}.bar.low:hover{opacity:.3}.bar.active,.bar.active:hover,.bar:focus-visible{background:var(--selected);opacity:1}@media(max-width:600px){.landscape .section-head{align-items:baseline;gap:12px}.chart-readout{font-size:10px;min-width:0}}
-.cumulative-section{border-top:1px solid var(--line);padding:25px 0 30px}#cumulative-chart{margin-top:22px}#cumulative-chart svg{display:block;width:100%;overflow:visible}.pace-note{font-size:18px;margin:12px 0 0}.coverage-note{color:var(--muted);font-size:10px;line-height:1.6;margin:8px 0 0}.more-details .landscape{border-top:0;padding-top:15px}.bar.empty{visibility:hidden}@media(max-width:600px){.pace-note{font-size:16px}}
-/* Compact overview and appearance controls. */
-:root{--paper:#F5F3EC;--ink:#292E2B;--muted:#666C65;--line:#DDDFD5;--accent:#356B50;--soft:#E5E8DC;--selected:#AD623F;--pace:#858B84}
-.appearance{display:flex;align-items:center;gap:14px}
-nav{padding:19px 0}.hero{padding:34px 0;grid-template-columns:1fr 310px;gap:25px}.hero h1{font-size:clamp(54px,6vw,76px);margin-bottom:13px}.hero .intro{margin:0;font-size:14px}.total strong{font-size:64px;letter-spacing:-.045em;line-height:1.1;margin:9px 0 12px;color:var(--accent)}.total .annual-count{font-size:11px;line-height:1.7;margin:0}.stats{padding:21px 0 24px}.stat strong{font-size:29px;margin:8px 0}.stat p{font-size:11px}.cumulative-section{padding-top:20px}#cumulative-chart{margin-top:12px}.coverage-note:empty{display:none}
-@media(max-width:600px){.appearance{gap:9px}nav{font-size:10px;letter-spacing:.02em}.hero{grid-template-columns:1fr;gap:24px;padding:28px 0}.hero h1{font-size:56px}.total strong{font-size:52px;margin:8px 0}.stats{padding:19px 0;gap:10px}.stat strong{font-size:26px}.stat+.stat{padding-left:10px}.stat p{font-size:10px}.cumulative-section .section-head h2{font-size:21px}}
-/* Readable supporting type, quieter framing, and a clearer chart hierarchy. */
-.hero h1{font-size:clamp(48px,5.2vw,64px);letter-spacing:-.05em}.total strong{font-size:72px}.eyebrow{font-size:12px;letter-spacing:.06em}.total .annual-count{font-size:12px}.hero .intro{font-size:15px}
-.stat .eyebrow{text-transform:none;font-size:13px;letter-spacing:0}.stat strong{font-size:30px}.stat p{font-size:12px;line-height:1.5}.stat+.stat{border-left:0;padding-left:0}.stats{gap:24px;padding:23px 0 25px}
-.cumulative-section .section-head{align-items:baseline}.cumulative-section .pace-note{font-size:16px;line-height:1.4;margin:0;text-align:right;color:var(--accent)}
-.section-head .mono,.chart-readout,#calendar-detail,.more-details summary{font-size:12px}.axis{font-size:11px}.month-title span,.weekday,.day,.legend{font-size:11px}.goal span{font-size:11px}.month-title{gap:8px}.month-title span{font-size:10px}.appearance button{font-size:12px}.appearance button{background:none;border:0;padding:7px;cursor:pointer}footer{align-items:center;flex-wrap:wrap;font-size:12px;padding:20px 0 28px}
-@media(max-width:600px){.hero{gap:19px;padding:25px 0}.hero h1{font-size:clamp(34px,9vw,52px);white-space:nowrap;margin-bottom:10px}.hero h1 br{display:none}.hero h1 br::after{content:' '}.total strong{font-size:58px;margin:5px 0 8px}.total .annual-count{font-size:12px}.stats{gap:16px;padding:20px 0}.stat+.stat{padding-left:0}.stat .eyebrow{font-size:12px;letter-spacing:0}.stat strong{font-size:26px}.stat p{font-size:12px}.cumulative-section .section-head{align-items:flex-start;flex-direction:column;gap:7px}.cumulative-section .pace-note{text-align:left;font-size:15px}.landscape .chart-readout{font-size:11px;min-width:0}.month-title{align-items:flex-start;flex-direction:column;gap:4px}.month-title span{font-size:10px}.legend{flex-wrap:wrap;gap:12px}.appearance{gap:8px}footer{gap:18px}.mobile-controls{font-size:12px}}
-.total .annual-date{font-size:12px;line-height:1.5;margin:6px 0 0;color:var(--muted)}
-</style>
-</head><body><div class="shell">
-<nav class="mono"><a href="../">AMIT SARAFF ↗</a><span>2026</span></nav>
-<header class="hero"><div><h1>A year<br> on <em>foot.</em></h1><p class="intro">10,000 steps a day.</p></div><aside class="total"><div class="eyebrow">Of the 2026 goal</div><strong id="year-percent"></strong><p class="annual-count mono" id="year-target"></p><p class="annual-date mono" id="as-of"></p></aside></header>
-<section class="stats" aria-label="Year statistics"><div class="stat"><div class="eyebrow">Daily average</div><strong id="average"></strong><p>steps per recorded day</p></div><div class="stat"><div class="eyebrow">Days at 10,000+</div><strong id="hits"></strong><p id="hit-note"></p></div><div class="stat"><div class="eyebrow">Longest streak</div><strong id="streak"></strong><p>consecutive days at 10,000+</p></div></section>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A year on foot. A personal record of daily steps, small routines, and a 10,000-step ambition."
+    />
+    <title>A year on foot · 2026</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="steps.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="shell">
+      <nav class="mono"><a href="../">AMIT SARAFF ↗</a><span>2026</span></nav>
+      <header class="hero">
+        <div>
+          <h1>
+            A year<br />
+            on <em>foot.</em>
+          </h1>
+          <p class="intro">10,000 steps a day.</p>
+        </div>
+        <aside class="total">
+          <div class="eyebrow">Of the 2026 goal</div>
+          <strong id="year-percent"></strong>
+          <p class="annual-count mono" id="year-target"></p>
+          <p class="annual-date mono" id="as-of"></p>
+        </aside>
+      </header>
+      <section class="stats" aria-label="Year statistics">
+        <div class="stat">
+          <div class="eyebrow">Daily average</div>
+          <strong id="average"></strong>
+          <p>steps per recorded day</p>
+        </div>
+        <div class="stat">
+          <div class="eyebrow">Days at 10,000+</div>
+          <strong id="hits"></strong>
+          <p id="hit-note"></p>
+        </div>
+        <div class="stat">
+          <div class="eyebrow">Longest streak</div>
+          <strong id="streak"></strong>
+          <p>consecutive days at 10,000+</p>
+        </div>
+      </section>
 
-<section class="cumulative-section" aria-labelledby="cumulative-title"><div class="section-head"><h2 id="cumulative-title">The year, so far</h2><p id="pace-note" class="pace-note"></p></div><div id="cumulative-chart"></div></section>
-<details class="more-details"><summary>Explore daily steps &amp; calendar</summary><section class="landscape" aria-label="Daily steps landscape"><div class="section-head"><h2>Daily steps</h2><output id="chart-readout" class="chart-readout" aria-live="off">Move across to explore</output></div><div class="mobile-controls"><button id="prev" aria-label="Previous month">←</button><span id="month-label"></span><button id="next" aria-label="Next month">→</button></div><div class="chart-wrap"><div class="chart" id="chart"></div><div class="goal" id="goal"><span>10,000</span></div></div><div class="axis" id="axis"></div></section><section class="calendar-section"><div class="section-head"><h2>The days, in detail</h2><span class="mono" id="updated"></span></div><p id="calendar-detail" class="mono" aria-live="polite">Select a date for its step count.</p><div class="months" id="months"></div><div class="legend"><span><i></i>10,000+ steps</span><span><i class="below"></i>Below goal</span><span>Outline / no entry</span></div></section></details><footer><span>Copenhagen · 2026</span><div class="appearance"><button id="theme" aria-label="Switch to dark mode">DARK ◐</button></div></footer>
-</div><script>
-// ── embedded data (mirrors steps.csv) ──────────────────────────────────────
-const CSV = `date,steps
-2026-01-01,1244
-2026-01-02,6067
-2026-01-03,2588
-2026-01-04,7558
-2026-01-05,5407
-2026-01-06,8473
-2026-01-07,5000
-2026-01-08,5751
-2026-01-09,4049
-2026-01-10,10655
-2026-01-11,14849
-2026-01-12,8788
-2026-01-13,8190
-2026-01-14,9446
-2026-01-15,10714
-2026-01-16,8703
-2026-01-17,10919
-2026-01-18,8274
-2026-01-19,9125
-2026-01-20,11742
-2026-01-21,7122
-2026-01-22,8213
-2026-01-23,14278
-2026-01-24,11249
-2026-01-25,8954
-2026-01-26,7087
-2026-01-27,10740
-2026-01-28,9655
-2026-01-29,8501
-2026-01-30,9662
-2026-01-31,11468
-2026-02-01,4022
-2026-02-02,6660
-2026-02-03,8497
-2026-02-04,8037
-2026-02-05,9871
-2026-02-06,16469
-2026-02-07,20447
-2026-02-08,13599
-2026-02-09,11799
-2026-02-10,6890
-2026-02-11,9944
-2026-02-12,6864
-2026-02-13,13248
-2026-02-14,7858
-2026-02-15,7737
-2026-02-16,10065
-2026-02-17,11129
-2026-02-18,14588
-2026-02-19,11541
-2026-02-20,10612
-2026-02-21,9064
-2026-02-22,2643
-2026-02-23,12796
-2026-02-24,11919
-2026-02-25,11982
-2026-02-26,14904
-2026-02-27,14222
-2026-02-28,6547
-2026-03-01,7728
-2026-03-02,6984
-2026-03-03,10239
-2026-03-04,10274
-2026-03-05,9691
-2026-03-06,10439
-2026-03-07,8336
-2026-03-08,10268
-2026-03-09,10899
-2026-03-10,14166
-2026-03-11,10131
-2026-03-12,10467
-2026-03-13,8784
-2026-03-14,18092
-2026-03-15,7879
-2026-03-16,6716
-2026-03-17,7771
-2026-03-18,8987
-2026-03-19,10344
-2026-03-20,15470
-2026-03-21,12422
-2026-03-22,7949
-2026-03-23,12327
-2026-03-24,10055
-2026-03-25,12885
-2026-03-26,14314
-2026-03-27,11572
-2026-03-28,9045
-2026-03-29,5909
-2026-03-30,11898
-2026-03-31,13809
-2026-04-01,8941
-2026-04-02,10037
-2026-04-03,16874
-2026-04-04,12743
-2026-04-05,11009
-2026-04-06,15891
-2026-04-07,8269
-2026-04-08,9343
-2026-04-09,9595
-2026-04-10,10704
-2026-04-11,16688
-2026-04-12,12407
-2026-04-13,11850
-2026-04-14,11799
-2026-04-15,6522
-2026-04-16,6813
-2026-04-17,11674
-2026-04-18,18122
-2026-04-19,6423
-2026-04-20,10866
-2026-04-21,6163
-2026-04-22,16118
-2026-04-23,10761
-2026-04-24,10631
-2026-04-25,10500
-2026-04-26,7180
-2026-04-27,8956
-2026-04-28,9149
-2026-04-29,10083
-2026-04-30,16420
-2026-05-01,13765
-2026-05-02,11958
-2026-05-03,9720
-2026-05-04,13041
-2026-05-05,9299
-2026-05-06,10317
-2026-05-07,10852
-2026-05-08,15415
-2026-05-09,15878
-2026-05-10,4332
-2026-05-11,6700
-2026-05-12,7013
-2026-05-13,4122
-2026-05-14,21282
-2026-05-15,21789
-2026-05-16,21125
-2026-05-17,22292
-2026-05-18,13635
-2026-05-19,10223
-2026-05-20,6663
-2026-05-21,8807
-2026-05-22,10650
-2026-05-23,6193
-2026-05-24,7543
-2026-05-25,6309
-2026-05-26,9680
-2026-05-27,12927
-2026-05-28,14610
-2026-05-29,13703
-2026-05-30,13841
-2026-05-31,6513
-2026-06-01,11554
-2026-06-02,17916
-2026-06-03,10270
-2026-06-04,10745
-2026-06-05,12433
-2026-06-06,12219
-2026-06-07,8898
-2026-06-08,6522
-2026-06-09,4916
-2026-06-10,10421
-2026-06-11,8294
-2026-06-12,15705
-2026-06-13,6209
-2026-06-14,7925
-2026-06-15,7294
-2026-06-16,6566
-2026-06-17,13037
-2026-06-18,9033
-2026-06-19,28158
-2026-06-20,11621
-2026-06-21,3376
-2026-06-22,9698
-2026-06-23,13723
-2026-06-24,15400
-2026-06-25,11142
-2026-06-26,9417
-2026-06-27,14162
-2026-06-28,10713
-2026-06-29,8099
-2026-06-30,11016
-2026-07-01,11509
-2026-07-02,3825
-2026-07-03,2913
-2026-07-04,10302
-2026-07-05,5921
-2026-07-06,6914
-2026-07-07,8720
-2026-07-08,17697
-2026-07-09,11436
-2026-07-10,11983
-2026-07-11,13594
-2026-07-12,3231
-2026-07-13,14340
-2026-07-14,6102
-2026-07-15,12966
-2026-07-16,9520
-2026-07-17,9926
-2026-07-18,8927
-2026-07-19,4919
-2026-07-20,12381
-2026-07-21,15245
-2026-07-22,10705
-2026-07-23,11348
-2026-07-24,15443
-2026-07-25,14417
-2026-07-26,23
-2026-07-27,5370
-2026-07-28,11901
-2026-07-29,11812
-2026-07-30,13495
-2026-07-31,24652
-2026-08-01,25984
-2026-08-02,30588
-2026-08-03,12044
-2026-08-04,17827
-2026-08-05,17072
-2026-08-06,24745
-2026-08-07,28402
-2026-08-08,32533
-2026-08-09,21152
-2026-08-10,4820
-2026-08-11,11147
-2026-08-12,7821
-2026-08-13,20333
-2026-08-14,16251
-2026-08-15,5618
-2026-08-16,9130
-2026-08-17,10426
-2026-08-18,5599
-2026-08-19,7270
-2026-08-20,9300
-2026-08-21,14574
-2026-08-22,10938
-2026-08-23,6733
-2026-08-24,6584
-2026-08-25,16246
-2026-08-26,15598
-2026-08-27,15604
-2026-08-28,8078
-2026-08-29,5797
-2026-08-30,3732
-2026-08-31,10187
-2026-09-01,7712
-2026-09-02,13353
-2026-09-03,7726
-2026-09-04,8155
-2026-09-05,5115
-2026-09-06,15
-2026-09-07,13926
-2026-09-08,8767
-2026-09-09,16706
-2026-09-10,13521
-2026-09-11,13827
-2026-09-12,9364
-2026-09-13,8957
-2026-09-14,11001
-2026-09-15,13167
-2026-09-16,12870
-2026-09-17,9393
-2026-09-18,10996
-2026-09-19,8393
-2026-09-20,10642
-2026-09-21,10203
-2026-09-22,16421
-2026-09-23,16154
-2026-09-24,11713
-2026-09-25,14502
-2026-09-26,8509
-2026-09-27,17556
-2026-09-28,2363
-2026-09-29,7659
-2026-09-30,11634
-2026-10-01,9824
-2026-10-02,9180
-2026-10-03,4804
-2026-10-04,3987
-2026-10-05,7169
-2026-10-06,13756
-2026-10-07,5404
-2026-10-08,7820
-2026-10-09,15841
-2026-10-10,8805
-2026-10-12,15064
-2026-10-13,10945
-2026-10-14,14519
-2026-10-15,19478
-2026-10-16,17232
-2026-10-17,20711
-2026-10-18,35160
-2026-10-19,21702
-2026-10-20,11587
-2026-10-21,9538
-2026-10-22,5488
-2026-10-23,6278
-2026-10-24,3947
-2026-10-25,6268
-2026-10-26,15266
-2026-10-27,6958
-2026-10-28,10111
-2026-10-29,10513
-2026-10-30,11420
-2026-10-31,5523
-2026-11-01,12154
-2026-11-02,7586
-2026-11-03,12688
-2026-11-04,13962
-2026-11-05,14323
-2026-11-06,12616
-2026-11-07,11268
-2026-11-08,6279
-2026-11-09,6876
-2026-11-10,9183
-`;
-const GOAL=10000, fmt=n=>n.toLocaleString('en-US'), $=id=>document.getElementById(id);
-const data=new Map(CSV.trim().split('\n').slice(1).map(row=>{const [d,n]=row.split(',');return[d,Number(n)]}));
-const dates=Array.from({length:365},(_,i)=>new Date(Date.UTC(2026,0,i+1))), key=d=>d.toISOString().slice(0,10);
-const values=dates.map(d=>data.get(key(d))), recorded=values.filter(n=>n!==undefined), last=values.findLastIndex(n=>n!==undefined);
-const monthNames=Array.from({length:12},(_,i)=>new Date(Date.UTC(2026,i,1)).toLocaleDateString('en-US',{month:'long',timeZone:'UTC'}));
-let month=dates[Math.max(0,last)].getUTCMonth(), mobile=matchMedia('(max-width:600px)'), max=Math.max(20000,...recorded)*1.08;
-const sum=recorded.reduce((a,b)=>a+b,0), hits=recorded.filter(n=>n>=GOAL).length;let longest=0,run=0;values.forEach(n=>{run=n>=GOAL?run+1:0;longest=Math.max(longest,run)});
-const annualGoal=dates.length*GOAL, annualPercent=sum/annualGoal*100;
-$('year-percent').textContent=annualPercent.toFixed(1)+'%';
-$('as-of').textContent=last>=0?'As of '+dates[last].toLocaleDateString('en-GB',{day:'numeric',month:'long',timeZone:'UTC'}):'';
-$('year-target').textContent=fmt(sum)+' of '+fmt(annualGoal)+' steps';
-$('average').textContent=recorded.length?fmt(Math.round(sum/recorded.length)):'—';$('hits').textContent=fmt(hits);$('streak').textContent=longest+' days';$('hit-note').textContent=`of ${recorded.length} recorded days`;
-$('updated').textContent=last>=0?'LATEST ENTRY / '+key(dates[last]):'NO ENTRIES YET';
-function renderCumulative(){
- const width=Math.max(300,$('cumulative-chart').clientWidth),height=mobile.matches?285:340;
- const left=42,right=18,top=65,bottom=30,plotW=width-left-right,plotH=height-top-bottom;
- const ceiling=Math.max(annualGoal,sum)*1.04,x=day=>left+day/365*plotW,y=n=>height-bottom-n/ceiling*plotH;
- const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
- svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('role','img');svg.setAttribute('aria-labelledby','cumulative-svg-title cumulative-svg-desc');
- function add(tag,attrs,text){const el=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));if(text!==undefined)el.textContent=text;svg.append(el);return el}
- add('title',{id:'cumulative-svg-title'},'Recorded steps compared with the annual walking goal');
- const gap=sum-(last+1)*GOAL,asOf=last>=0?dates[last].toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}):'—';
- add('desc',{id:'cumulative-svg-desc'},`${fmt(sum)} recorded steps through ${asOf}. Annual target: ${fmt(annualGoal)}. Dashed line represents 10,000 steps per calendar day. Actual line ends at the latest entry.`);
- const label={fill:'var(--muted)','font-family':'ui-monospace,monospace','font-size':12};
- [0,1000000,2000000,3000000].forEach(n=>{add('line',{x1:left,y1:y(n),x2:width-right,y2:y(n),stroke:'var(--line)','stroke-width':.6});add('text',{...label,x:left-9,y:y(n)+3,'text-anchor':'end'},n===0?'0':n/1000000+'m')});
- [0,3,6,9].forEach(m=>{const day=(Date.UTC(2026,m,1)-Date.UTC(2026,0,1))/86400000;add('text',{...label,x:x(day),y:height-8},monthNames[m].slice(0,3))});
- add('text',{...label,x:x(365),y:height-8,'text-anchor':'end'},'Dec 31');
- add('line',{x1:x(0),y1:y(0),x2:x(365),y2:y(annualGoal),stroke:'var(--pace)','stroke-width':1.2,'stroke-dasharray':'5 6'});
- add('text',{...label,x:x(365),y:y(annualGoal)-12,'text-anchor':'end'},'3.65m · goal');
- add('text',{...label,x:x(205),y:y(205*GOAL)+20},'10,000/day pace');
- let total=0,path=`M ${x(0)} ${y(0)}`,pen=true;
- for(let i=0;i<=last;i++){if(values[i]===undefined){pen=false;continue}total+=values[i];path+=` ${pen?'L':'M'} ${x(i+1)} ${y(total)}`;pen=true}
- if(last>=0){add('path',{d:path,fill:'none',stroke:'var(--accent)','stroke-width':2.5,'stroke-linejoin':'round','stroke-linecap':'round'});
- const endX=x(last+1),endY=y(sum);add('circle',{cx:endX,cy:endY,r:4,fill:'var(--accent)',stroke:'var(--paper)','stroke-width':2});
- const labelY=Math.max(19,endY-42);add('line',{x1:endX,y1:labelY+15,x2:endX,y2:endY-8,stroke:'var(--accent)','stroke-width':.7});
- add('text',{...label,x:endX,y:labelY,'text-anchor':'end',fill:'var(--accent)','font-size':mobile.matches?13:15},(sum/1000000).toFixed(2)+'m steps');
- add('text',{...label,x:endX,y:labelY+14,'text-anchor':'end'},asOf);
- }
- $('cumulative-chart').replaceChildren(svg);
- $('pace-note').textContent=last<0?'Your year starts with the first recorded day.':fmt(Math.abs(gap))+' steps '+(gap>=0?'ahead of':'behind')+' pace';
-}
-$('cumulative-chart').closest('section').nextElementSibling.addEventListener('toggle',()=>{positionGoal()});
-let chartIndices=[], activeChartDay=null;
-function showChartDay(i){if(i===activeChartDay)return;activeChartDay=i;const n=values[i];$('chart-readout').textContent=dates[i].toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'})+' · '+(n===undefined?'No entry':fmt(n)+' steps');$('chart').querySelectorAll('.bar').forEach(b=>{const active=Number(b.dataset.day)===i;b.classList.toggle('active',active);b.tabIndex=active?0:-1})}
-$('chart').onpointermove=e=>{const r=$('chart').getBoundingClientRect(),slot=Math.max(0,Math.min(chartIndices.length-1,Math.floor((e.clientX-r.left)/r.width*chartIndices.length)));showChartDay(chartIndices[slot])};
-function renderChart(){activeChartDay=null;const indices=dates.map((_,i)=>i).filter(i=>!mobile.matches||dates[i].getUTCMonth()===month);chartIndices=indices;$('chart').replaceChildren();indices.forEach(i=>{const b=document.createElement('button'),n=values[i];b.className='bar'+(n===undefined?' empty':n<GOAL?' low':'');b.style.height=(n===undefined?0:Math.max(.8,n/max*100))+'%';b.type='button';b.setAttribute('aria-label',key(dates[i])+': '+(n===undefined?'no entry':fmt(n)+' steps'));b.dataset.day=i;b.tabIndex=-1;b.onfocus=()=>showChartDay(i);b.onclick=()=>showChartDay(i);b.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const at=chartIndices.indexOf(i),next=Math.max(0,Math.min(chartIndices.length-1,at+(e.key==='ArrowRight'?1:-1)));$('chart').children[next].focus()}};$('chart').append(b)});$('axis').innerHTML=mobile.matches?'<span>01</span><span>15</span><span>'+indices.length+'</span>':monthNames.map(n=>'<span>'+n.slice(0,3).toUpperCase()+'</span>').join('');$('goal').style.bottom=(230*GOAL/max)+'px';$('month-label').textContent=monthNames[month]+' 2026';$('prev').disabled=month===0;$('next').disabled=month===11;showChartDay(indices.includes(last)?last:indices[0]);positionGoal();}
-function positionGoal(){$('goal').style.bottom=($('chart').clientHeight*GOAL/max)+'px'}
-function select(i){$('calendar-detail').textContent=dates[i].toLocaleDateString('en-GB',{day:'numeric',month:'long',timeZone:'UTC'})+' · '+(values[i]===undefined?'No entry':fmt(values[i])+' steps');document.querySelectorAll('.day').forEach(el=>{const active=Number(el.dataset.index)===i;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active))})}
-monthNames.forEach((name,m)=>{const section=document.createElement('div');section.innerHTML='<div class="month-title">'+name+'<span>'+values.filter((n,i)=>dates[i].getUTCMonth()===m&&n>=GOAL).length+' GOAL DAYS</span></div><div class="grid"></div>';const grid=section.querySelector('.grid');['M','T','W','T','F','S','S'].forEach(s=>{const e=document.createElement('span');e.className='weekday';e.textContent=s;grid.append(e)});const first=dates.findIndex(d=>d.getUTCMonth()===m);for(let j=0;j<(dates[first].getUTCDay()+6)%7;j++)grid.append(document.createElement('span'));dates.forEach((d,i)=>{if(d.getUTCMonth()!==m)return;const n=values[i],b=document.createElement('button');b.className='day '+(n===undefined?'missing':n>=GOAL?'hit':'');b.textContent=d.getUTCDate();b.dataset.index=i;b.setAttribute('aria-label',key(d)+': '+(n===undefined?'no entry':fmt(n)+' steps'));b.title=b.getAttribute('aria-label');b.onclick=()=>select(i);grid.append(b)});$('months').append(section)});
-$('prev').onclick=()=>{if(month>0){month--;renderChart()}};$('next').onclick=()=>{if(month<11){month++;renderChart()}};
-const forest={light:['#F5F3EC','#292E2B','#666C65','#DDDFD5','#356B50','#E5E8DC','#AD623F','#858B84'],dark:['#19251F','#EAEDE7','#ADB8AE','#36483D','#9AC5A5','#2B3D31','#E5AA81','#8D9F91']};
-let dark=false;
-try{dark=localStorage.getItem('steps-theme')==='dark'}catch{}
-function applyAppearance(){document.body.classList.toggle('dark',dark);document.body.style.colorScheme=dark?'dark':'light';['paper','ink','muted','line','accent','soft','selected','pace'].forEach((key,i)=>document.body.style.setProperty('--'+key,forest[dark?'dark':'light'][i]));$('theme').textContent=dark?'LIGHT ◑':'DARK ◐';$('theme').setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');try{localStorage.setItem('steps-theme',dark?'dark':'light')}catch{}}
-$('theme').onclick=()=>{dark=!dark;applyAppearance()};applyAppearance();
-mobile.addEventListener('change',()=>{renderChart();renderCumulative()});window.addEventListener('resize',()=>{positionGoal();renderCumulative()});renderChart();renderCumulative();
-</script></body></html>
+      <section class="cumulative-section" aria-labelledby="cumulative-title">
+        <div class="section-head">
+          <h2 id="cumulative-title">The year, so far</h2>
+          <p id="pace-note" class="pace-note"></p>
+        </div>
+        <div id="cumulative-chart"></div>
+      </section>
+      <details class="more-details">
+        <summary>Explore daily steps &amp; calendar</summary>
+        <section class="landscape" aria-label="Daily steps landscape">
+          <div class="section-head">
+            <h2>Daily steps</h2>
+            <output id="chart-readout" class="chart-readout" aria-live="off"
+              >Move across to explore</output
+            >
+          </div>
+          <div class="mobile-controls">
+            <button id="prev" aria-label="Previous month">←</button
+            ><span id="month-label"></span
+            ><button id="next" aria-label="Next month">→</button>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart" id="chart"></div>
+            <div class="goal" id="goal"><span>10,000</span></div>
+          </div>
+          <div class="axis" id="axis"></div>
+        </section>
+        <section class="calendar-section">
+          <div class="section-head">
+            <h2>The days, in detail</h2>
+            <span class="mono" id="updated"></span>
+          </div>
+          <p id="calendar-detail" class="mono" aria-live="polite">
+            Select a date for its step count.
+          </p>
+          <div class="months" id="months"></div>
+          <div class="legend">
+            <span><i></i>10,000+ steps</span
+            ><span><i class="below"></i>Below goal</span
+            ><span>Outline / no entry</span>
+          </div>
+        </section>
+      </details>
+      <footer>
+        <span>Copenhagen · 2026</span>
+        <div class="appearance">
+          <button id="theme" aria-label="Switch to dark mode">DARK ◐</button>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
