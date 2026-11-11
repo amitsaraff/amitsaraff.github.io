@@ -22,6 +22,11 @@ button,a{-webkit-tap-highlight-color:transparent}
 button:focus-visible,a:focus-visible{outline:3px solid var(--orange);outline-offset:5px}
 .shell{max-width:1200px;padding:0 40px;margin:auto}
 .eyebrow{font:11px var(--mono);letter-spacing:1.5px;text-transform:uppercase}
+.site-nav{display:flex;align-items:center;padding:19px 0;border-bottom:1px solid var(--line);font:11px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.09em}
+.home-link{text-decoration:none}
+.home-link:hover{text-decoration:underline}
+.home-link:focus-visible{outline-width:2px}
+@media(max-width:600px){.site-nav{font-size:10px;letter-spacing:.02em}}
 .topbar{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
 .brand{text-decoration:none;font-family:var(--serif);font-size:30px;letter-spacing:-1px}
 .brand span{font:10px var(--mono);letter-spacing:1px;margin-left:14px;border-left:1px solid var(--line);padding-left:16px;vertical-align:middle}
@@ -156,6 +161,9 @@ h3{font-size:35px}
 </head>
 <body>
 <div class="shell">
+<nav class="site-nav" aria-label="Site navigation">
+<a class="home-link" href="../../" aria-label="Amit Saraff’s homepage">AMIT SARAFF ↗</a>
+</nav>
 <header class="topbar">
 <a href="#" class="brand">Talisker <span>THE LABEL ARCHIVE</span>
 </a>
