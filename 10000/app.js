@@ -68,7 +68,8 @@ function renderCumulative() {
     plotH = height - top - bottom;
   const ceiling = Math.max(annualGoal, sum) * 1.04,
     x = (day) => left + (day / 365) * plotW,
-    y = (n) => height - bottom - (n / ceiling) * plotH;
+    y = (n) => height - bottom - (n / ceiling) * plotH,
+    goalLabelY = y(annualGoal) - 12;
   const ns = "http://www.w3.org/2000/svg",
     svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
@@ -127,7 +128,12 @@ function renderCumulative() {
     const day = (Date.UTC(2026, m, 1) - Date.UTC(2026, 0, 1)) / 86400000;
     add(
       "text",
-      { ...label, x: x(day), y: height - 8 },
+      {
+        ...label,
+        x: x(day),
+        y: height - 8,
+        "text-anchor": m === 0 ? "start" : "middle",
+      },
       monthNames[m].slice(0, 3),
     );
   });
@@ -145,9 +151,9 @@ function renderCumulative() {
     "stroke-width": 1.2,
     "stroke-dasharray": "5 6",
   });
-  add(
+  const goalLabel = add(
     "text",
-    { ...label, x: x(365), y: y(annualGoal) - 12, "text-anchor": "end" },
+    { ...label, x: x(365), y: goalLabelY, "text-anchor": "end" },
     "3.65m · goal",
   );
   add(
@@ -186,10 +192,16 @@ function renderCumulative() {
       stroke: "var(--paper)",
       "stroke-width": 2,
     });
-    const labelY = Math.max(19, endY - 42);
+    const dateOffset = 14;
+    const labelSpacing = 16;
+    const labelY = endY - 42;
+    if (goalLabelY > labelY - labelSpacing && goalLabelY < endY + labelSpacing) {
+      goalLabel.setAttribute("y", labelY - labelSpacing);
+    }
+    const anchor = endX < 140 ? "start" : "end";
     add("line", {
       x1: endX,
-      y1: labelY + 15,
+      y1: labelY + dateOffset + 1,
       x2: endX,
       y2: endY - 8,
       stroke: "var(--accent)",
@@ -201,7 +213,7 @@ function renderCumulative() {
         ...label,
         x: endX,
         y: labelY,
-        "text-anchor": "end",
+        "text-anchor": anchor,
         fill: "var(--accent)",
         "font-size": mobile.matches ? 13 : 15,
       },
@@ -209,7 +221,7 @@ function renderCumulative() {
     );
     add(
       "text",
-      { ...label, x: endX, y: labelY + 14, "text-anchor": "end" },
+      { ...label, x: endX, y: labelY + dateOffset, "text-anchor": anchor },
       asOf,
     );
   }
