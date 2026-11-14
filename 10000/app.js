@@ -59,10 +59,10 @@ $("updated").textContent =
   last >= 0 ? "LATEST ENTRY / " + key(dates[last]) : "NO ENTRIES YET";
 function renderCumulative() {
   const width = Math.max(300, $("cumulative-chart").clientWidth),
-    height = mobile.matches ? 285 : 340;
+    height = mobile.matches ? 297 : 352;
   const left = 42,
     right = 18,
-    top = 65,
+    top = 77,
     bottom = 30,
     plotW = width - left - right,
     plotH = height - top - bottom;
@@ -192,10 +192,13 @@ function renderCumulative() {
       stroke: "var(--paper)",
       "stroke-width": 2,
     });
-    const dateOffset = 14;
-    const labelSpacing = 16;
-    const labelY = endY - 42;
-    if (goalLabelY > labelY - labelSpacing && goalLabelY < endY + labelSpacing) {
+    const dateOffset = 20;
+    const labelSpacing = 24;
+    const labelY = endY - 48;
+    if (
+      goalLabelY > labelY - labelSpacing &&
+      goalLabelY < endY + labelSpacing
+    ) {
       goalLabel.setAttribute("y", labelY - labelSpacing);
     }
     const anchor = endX < 140 ? "start" : "end";
